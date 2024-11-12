@@ -20,6 +20,7 @@ const Banner = () => {
             <p className="font-medium text-sm md:text-base">
               NOSSOS MAIS VENDIDOS de nosso site  e de todos os lugares disponiveis
               <p>ola mundo</p>
+              <p>ola mundo</p>
             </p>
           </div>
           <h1 className="prata-regular text-3xl sm:py-3 lg:text-5xl leading-relaxed">
