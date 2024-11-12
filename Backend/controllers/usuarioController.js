@@ -74,7 +74,7 @@ export const registrar = async (req, res) => {
 export const admin = async (req, res) => {
   try {
     const { email, senha } = req.body;
-    if (email === process.env.ADMIN && senha === process.env.ADMIN_SENHA) {
+    if (email === process.env.ADMIN_EMAIL && senha === process.env.ADMIN_SENHA) {
       const token = jwt.sign(email + senha, process.env.JWT_SECRET);
       res.json({ success: true, token });
     }

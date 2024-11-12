@@ -2,30 +2,24 @@ import usuarioModelo from "../models/usuarioModel.js";
 
 export const addParaCarrinho = async (req, res) => {
   try {
-    // Desestruturando os dados do body da requisição
     const { usuarioId, itemId } = req.body;
 
-    // Verificando se os dados necessários foram enviados
     if (!usuarioId || !itemId) {
       return res
         .status(400)
         .json({ success: false, message: "Usuário e Item são obrigatórios" });
     }
 
-    // Buscando os dados do usuário no banco de dados
     const usuarioDados = await usuarioModelo.findById(usuarioId);
 
-    // Verificando se o usuário existe
     if (!usuarioDados) {
       return res
         .status(404)
         .json({ success: false, message: "Usuário não encontrado" });
     }
 
-    // Inicializando os dados do carrinho caso não existam
     let dadosCarrinho = usuarioDados.dadosCarrinho || {};
 
-    // Se o item já existe no carrinho, incrementa a quantidade
     if (dadosCarrinho[itemId]) {
       dadosCarrinho[itemId] += 1;
     } else {
@@ -71,6 +65,6 @@ export const carrinhoUsuario = async (req,res) => {
     res.json({success: true, dadosCarrinho})
   } catch (error) {
     console.log(error);
-    res.json({success: false, message: error.message})
+    res.json({success: false, message: error.message })
   }
 }

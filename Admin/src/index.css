@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@100..900&family=Prata&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.bebas-neue-regular {
+  font-family: "Bebas Neue", sans-serif;
+  font-style: normal;
+}
+
+* {
+  font-family: "Bebas Neue", sans-serif;
+}
+
+.animacao-navbar {
+  transition: transform 1s ease, rotate 1s ease;
+}
+
+.animacao-navbar:hover {
+  transform: translateX(-80px) rotate(360deg);
+}
+
+@keyframes rolagemIcon {
+  from {
+    transform: translateX(0) rotate(0deg);
+  }
+  to {
+    transform: translateX(-80px) rotate(360deg);
+  }
+}

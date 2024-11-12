@@ -8,16 +8,15 @@ import "react-tooltip/dist/react-tooltip.css";
 import { ShopContext } from "../Context/Context";
 
 const Navbar = () => {
-  const { navigate, setToken, contagemCarrinho } = useContext(ShopContext);
+  const { navigate, setToken, contagemCarrinho, token } = useContext(ShopContext);
   const [isVisible, setIsVisible] = useState(false);
   const [bgColor, setBgColor] = useState("bg-white");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const token = localStorage.getItem("token"); // Pega o token do localStorage
 
   const logout = () => {
     navigate("/login");
     localStorage.removeItem("token");
-    setToken(""); // Limpa o estado do token no contexto
+    setToken(""); 
   };
 
   const toggleProfileDropdown = useCallback(() => {
@@ -70,9 +69,8 @@ const Navbar = () => {
         ))}
       </div>
 
-      {/* Profile and Cart Icons */}
       <div className="items-center gap-4 hidden md:flex">
-        {token ? ( // Verifica se o token existe antes de mostrar os ícones
+        {token ? ( 
           <div className="relative">
             <NavLink to="#" onClick={toggleProfileDropdown} aria-label="Perfil">
               <FontAwesomeIcon

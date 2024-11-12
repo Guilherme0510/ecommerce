@@ -18,6 +18,7 @@ export const ShopContextProvider = ({ children }) => {
   const [token, setToken] = useState("");
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
+  // Função para adicionar item ao carrinho
   const addParaCarrinho = async (itemId) => {
     setCarrinhoItems((prevCarrinho) => {
       const updatedCarrinho = { ...prevCarrinho };
@@ -28,7 +29,7 @@ export const ShopContextProvider = ({ children }) => {
     if (token) {
       try {
         await axios.post(
-          backendUrl + "/api/carrinho/addcarrinho",
+          `${backendUrl}/api/carrinho/addcarrinho`,
           { itemId },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -39,10 +40,12 @@ export const ShopContextProvider = ({ children }) => {
     }
   };
 
+  // Função para contar os itens no carrinho
   const contagemCarrinho = () => {
     return Object.values(carrinhoItems).reduce((acc, count) => acc + count, 0);
   };
 
+  // Função para calcular o valor total do carrinho
   const getCartAmount = () => {
     const produtosMap = produtos.reduce((map, produto) => {
       map[produto._id] = produto;
@@ -59,28 +62,29 @@ export const ShopContextProvider = ({ children }) => {
     }, 0);
   };
 
+  // Função para atualizar a quantidade de um item no carrinho
   const atualizarQuantidade = async (itemId, quantidade) => {
-    let carrinhoDados = structuredClone(carrinhoItems);
-    carrinhoDados[itemId] = quantidade;
+    const carrinhoDados = { ...carrinhoItems, [itemId]: quantidade };
     setCarrinhoItems(carrinhoDados);
 
     if (token) {
       try {
         await axios.post(
-          backendUrl + "/api/carrinho/atualizar",
+          `${backendUrl}/api/carrinho/atualizar`,
           { itemId, quantidade },
-          { headers: { token } }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
       } catch (error) {
         console.log(error);
-        toast.error(error.message);
+        toast.error(error.message || "Erro ao atualizar o carrinho.");
       }
     }
   };
 
+  // Função para buscar os dados dos produtos
   const pegarDadosProdutos = async () => {
     try {
-      const response = await axios.get(backendUrl + "/api/produto/listaproduto");
+      const response = await axios.get(`${backendUrl}/api/produto/listaproduto`);
       if (response.data.success) {
         setProdutos(response.data.produtos);
       } else {
@@ -88,44 +92,42 @@ export const ShopContextProvider = ({ children }) => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message);
+      toast.error("Erro ao buscar produtos.");
     }
   };
 
+  // Função para pegar os dados do carrinho do usuário
   const pegarCarrinhoUsuario = async (token) => {
     try {
-      const response = await axios.post(
-        "http://localhost:4000/api/carrinho/visualizar",
-        {},
-        { headers: { token } }
-      );
+     const response = await axios.post(backendUrl + '/api/carrinho/visualizar', {}, {headers: {token }})
       if (response.data.success) {
         setCarrinhoItems(response.data.dadosCarrinho);
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message);
+      toast.error(error.message || "Erro ao carregar o carrinho.");
     }
   };
 
-  
   useEffect(() => {
-    pegarDadosProdutos()
-  },[])
-  
+    pegarDadosProdutos();
+  }, []);
+
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("token", token);
+    }
+  }, [token]);
+
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (savedToken && !token) {
       setToken(savedToken);
+      pegarCarrinhoUsuario(savedToken);
     }
   }, [token]);
-  useEffect(() => {
-    if (!token && localStorage.getItem("token")) {
-      setToken(localStorage.getItem("token"));
-      pegarCarrinhoUsuario(localStorage.getItem("token"))
-    }
-  }, []);
-  
+
+  // Valores passados pelo contexto
   const valores = {
     currency,
     frete,
@@ -139,9 +141,8 @@ export const ShopContextProvider = ({ children }) => {
     produtos,
     atualizarQuantidade,
     carrinhoItems,
-    setCarrinhoItems
+    setCarrinhoItems,
   };
-  return (
-    <ShopContext.Provider value={valores}>{children}</ShopContext.Provider>
-  );
+
+  return <ShopContext.Provider value={valores}>{children}</ShopContext.Provider>;
 };

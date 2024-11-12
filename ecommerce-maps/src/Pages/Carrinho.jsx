@@ -28,7 +28,7 @@ const Carrinho = () => {
   }, [produtosCarrinho, frete]);
 
   useEffect(() => {
-    if(produtos.length > 0) {
+    if (produtos && produtos.length > 0 && carrinhoItens) {
       const tempData = []
       for(const itens in carrinhoItens){
         for(const item in carrinhoItens[itens]){

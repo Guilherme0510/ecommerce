@@ -23,22 +23,6 @@ export const addProduto = async (req, res) => {
         .json({ success: false, message: "Nenhuma imagem foi enviada." });
     }
 
-    // let imagemUrl = await Promise.all(
-    //   imagens.map(async (item) => {
-    //     try {
-    //       const resultado = await cloudinary.uploader.upload(item.path, {
-    //         resource_type: 'image',
-    //       });
-    //       return resultado.secure_url;
-    //     } catch (error) {
-    //       console.log('Erro ao fazer upload para o Cloudinary:', error);
-    //       return null;
-    //     }
-    //   })
-    // );
-
-    // imagemUrl = imagemUrl.filter(url => url !== null);
-
     const produtoDados = {
       nome,
       preco: Number(preco),
