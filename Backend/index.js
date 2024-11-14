@@ -17,14 +17,14 @@ connectCloudinary()
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req,res) => {
-  res.send(`api funcionando`);
-})
 
 app.use('/api/user', usuarioRoute)
 app.use('/api/produto', produtoRoute)
 app.use('/api/pedido', pedidoRoute)
 app.use('/api/carrinho', carrinhoRoute)
 
+app.get('/', (req,res) => {
+  res.send(`api funcionando`);
+})
 
 app.listen(port, () => console.log("Rodando na porta " + port))
