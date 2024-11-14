@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ItemProduto from "../Components/ItemProduto";
-import { images } from "../assets/assets.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Texto from "../Components/Texto.jsx";
 import {
@@ -9,27 +8,40 @@ import {
   faClose,
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useContext } from "react";
+import { ShopContext } from "../Context/Context.jsx";
 
 const Produtos = () => {
+  const { backendUrl } = useContext(ShopContext);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [showFilter, setShowFilter] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchBar, setSearchBar] = useState(false);
-  const [sortOption, setSortOption] = useState("relevante"); 
+  const [sortOption, setSortOption] = useState("relevante");
+  const [produtos, setProdutos] = useState([]);
   const itemsPerPage = 8;
 
-  const produtos = [
-    { id: 1, img: images.p1, nome: "Pastel de Carne", preco: 19.99, categoria: "Carne" },
-    { id: 2, img: images.p2, nome: "Pastel de Queijo", preco: 17.99, categoria: "Queijo" },
-    { id: 3, img: images.p3, nome: "Pastel de Carne Seca", preco: 21.99, categoria: "Carne" },
-    { id: 4, img: images.p4, nome: "Pastel de Frango", preco: 18.99, categoria: "Frango" },
-    { id: 5, img: images.p5, nome: "Pastel de Camarão", preco: 24.99, categoria: "Frutos do Mar" },
-    { id: 6, img: images.p6, nome: "Pastel de Palmito", preco: 20.99, categoria: "Vegetais" },
-    { id: 7, img: images.p7, nome: "Pastel de Vegetais", preco: 16.99, categoria: "Vegetais" },
-    { id: 8, img: images.p8, nome: "Pastel de Picanha", preco: 22.99, categoria: "Carne" },
-    { id: 9, img: images.p9, nome: "Pastel de Batata", preco: 15.99, categoria: "Vegetais" },
-    { id: 10, img: images.p10, nome: "Pastel de Frutos do Mar", preco: 29.99, categoria: "Frutos do Mar" },
-  ];
+  useEffect(() => {
+    const fetchProdutos = async () => {
+      try {
+        const response = await axios.get(
+          backendUrl + "/api/produto/listaproduto"
+        );
+        if (response.data.success) {
+          setProdutos(response.data.lista);
+        } else {
+          toast.error(response.data.message);
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error(error.message);
+      }
+    };
+
+    fetchProdutos();
+  }, []);
 
   const toggleCategory = (e) => {
     const value = e.target.value;
@@ -40,23 +52,29 @@ const Produtos = () => {
     );
   };
 
+  // Garantir que filteredProducts seja sempre um array
   const filteredProducts =
-    selectedCategories.length > 0
-      ? produtos.filter((produto) => selectedCategories.includes(produto.categoria))
+    Array.isArray(produtos) && selectedCategories.length > 0
+      ? produtos.filter((produto) =>
+          selectedCategories.includes(produto.categoria)
+        )
       : produtos;
 
-  const sortedProducts = filteredProducts.sort((a, b) => {
-    if (sortOption === "relevante") {
-      return a.id - b.id; 
-    }
-    if (sortOption === "crescente") {
-      return a.preco - b.preco;
-    }
-    if (sortOption === "decrescente") {
-      return b.preco - a.preco; 
-    }
-    return 0; 
-  });
+  // Ordenação dos produtos
+  const sortedProducts = Array.isArray(filteredProducts)
+    ? filteredProducts.sort((a, b) => {
+        if (sortOption === "relevante") {
+          return a.id - b.id;
+        }
+        if (sortOption === "crescente") {
+          return a.preco - b.preco;
+        }
+        if (sortOption === "decrescente") {
+          return b.preco - a.preco;
+        }
+        return 0;
+      })
+    : [];
 
   const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -148,14 +166,14 @@ const Produtos = () => {
           {paginatedProducts.map((item, index) => (
             <div
               className="flex flex-col"
-              key={item.id}
+              key={`${item.id}-${index}`} // Combinação do ID e índice para garantir unicidade
               data-aos="fade-down"
               data-aos-duration="200"
               data-aos-delay={`${200 + index * 100}`}
             >
               <ItemProduto
-                id={item.id}
-                image={item.img}
+                produtoId={item._id}
+                image={item.imagem[0]}
                 name={item.nome}
                 preco={item.preco}
                 size="h-40 w-44 md:h-64 md:w-56"

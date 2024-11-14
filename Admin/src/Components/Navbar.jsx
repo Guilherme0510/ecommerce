@@ -40,9 +40,9 @@ const Navbar = ({setToken}) => {
             </div>
           )}
         </div>
-        <div className="flex flex-col">
-          <p>Nome</p>
-          <p>Email</p>
+        <div className="flex flex-col text-center">
+          <p>Nome: Administrador</p>
+          <p>Email: test@test.com</p>
         </div>
       </div>
       <div className="flex flex-col justify-center items-center gap-10 h-5/6">

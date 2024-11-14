@@ -4,7 +4,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { imagens } from "../assets/assets";
 import { backendUrl } from "../App.jsx";
 
-const Add = ({token}) => {
+const Add = ({ token }) => {
   const [image1, setImage1] = useState(false);
   const [image2, setImage2] = useState(false);
   const [image3, setImage3] = useState(false);
@@ -15,8 +15,12 @@ const Add = ({token}) => {
   const [preco, setPreco] = useState("");
   const [categoria, setCategoria] = useState("");
 
+  const [isLoading, setIsLoading] = useState(false); // Estado para controlar o carregamento
+
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+
+    setIsLoading(true); // Inicia o carregamento
 
     try {
       const formData = new FormData();
@@ -56,6 +60,8 @@ const Add = ({token}) => {
     } catch (error) {
       console.error(error);
       toast.error(error.message);
+    } finally {
+      setIsLoading(false); // Finaliza o carregamento
     }
   };
 
@@ -182,11 +188,17 @@ const Add = ({token}) => {
           </div>
         </div>
         <button
-          type="submit"
-          className="bg-orange-400 hover:bg-orange-600 duration-200 transition-all ease-in-out hover:rotate-6 w-32 py-3 rounded-2xl text-white tracking-wider hover:tracking-widest"
-        >
-          Adicionar
-        </button>
+  type="submit"
+  className={`bg-orange-400 hover:bg-orange-600 duration-200 transition-all ease-in-out ${isLoading ? '' : 'hover:rotate-6'} w-32 py-3 rounded-2xl text-white tracking-wider hover:tracking-widest`}
+  disabled={isLoading} 
+>
+  {isLoading ? (
+    <span>Carregando...</span> 
+  ) : (
+    "Adicionar"
+  )}
+</button>
+
       </form>
     </>
   );

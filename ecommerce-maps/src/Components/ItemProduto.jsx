@@ -2,16 +2,17 @@ import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { ShopContext } from "../Context/Context";
 
-const ItemProduto = ({ id, image, name, preco, size }) => {
+const ItemProduto = ({ produtoId, image, name, preco }) => {
   const { currency } = useContext(ShopContext);
 
+
   return (
-    <Link to={`/produto/${id}`} className="text-gray-700 cursor-pointer">
+    <Link to={`/produto/${produtoId}`} className="text-gray-700 cursor-pointer">
       <div className="flex flex-col items-center">
         <div className="overflow-hidden">
           <img
             src={image}
-            className={`object-cover rounded-xl hover:scale-110 transition ease-in-out ${size}`} 
+            className={` h-[200px] object-cover rounded-xl hover:scale-110 transition ease-in-out`} 
             alt={name || 'Produto'}
           />
         </div>

@@ -23,21 +23,35 @@ export const addProduto = async (req, res) => {
         .json({ success: false, message: "Nenhuma imagem foi enviada." });
     }
 
+    // Gere as URLs das imagens para retornar ao frontend
+    let imagensUrl = await Promise.all(
+      imagens.map(async (item) => {
+        let result = await cloudinary.uploader.upload(item.path, {
+          resource_type: "image"
+        });
+        return result.secure_url;
+      })
+    );
+
     const produtoDados = {
       nome,
       preco: Number(preco),
       categoria,
       descricao,
-      imagem: imagens,
+      imagem: imagensUrl, // Salve os caminhos das imagens no banco de dados
       data,
     };
 
-    console.log("Dados do Produto:", produtoDados);
-
+    
     const produto = new produtoModel(produtoDados);
     await produto.save();
-
-    res.json({ success: true, message: "Produto adicionado com sucesso!" });
+    
+    console.log("Dados do Produto:", produto);
+    res.json({
+      success: true,
+      message: "Produto adicionado com sucesso!",
+      produto
+    });
   } catch (error) {
     console.log(error);
     res.json({
@@ -46,6 +60,7 @@ export const addProduto = async (req, res) => {
     });
   }
 };
+
 
 export const listaProduto = async (req, res) => {
   try {
@@ -59,8 +74,8 @@ export const listaProduto = async (req, res) => {
 
 export const removerProduto = async (req,res) => {
   try {
-    const remover = await produtoModel.findByIdAndDelete(req.body.id)
-    res.json({success: true, message: "Item removido", remover})
+    await produtoModel.findByIdAndDelete(req.body.id)
+    res.json({success: true, message: "Item removido"})
   } catch (error) {
     console.log(error);
     res.json({success: false, message: error.message})
@@ -69,8 +84,8 @@ export const removerProduto = async (req,res) => {
 
 export const produtoUnico = async (req,res) => {
   try {
-    const { produtoId } = req.body
-    const produto = await produtoModel.findById(produtoId)
+    const { id } = req.body
+    const produto = await produtoModel.findById(id)
     res.json({success: true, produto})
   } catch (error) {
     console.log(error);

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const produtoSchema = new mongoose.Schema({
+    itemId: {type: String},
     nome: {type: String},
     preco: {type: Number},
     categoria: {type: String},

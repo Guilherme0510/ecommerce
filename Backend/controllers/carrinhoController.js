@@ -4,43 +4,30 @@ export const addParaCarrinho = async (req, res) => {
   try {
     const { usuarioId, itemId } = req.body;
 
-    if (!usuarioId || !itemId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Usuário e Item são obrigatórios" });
-    }
-
     const usuarioDados = await usuarioModelo.findById(usuarioId);
-
+    
     if (!usuarioDados) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Usuário não encontrado" });
+      return res.json({ success: false, message: "Usuário não encontrado" });
     }
 
     let dadosCarrinho = usuarioDados.dadosCarrinho || {};
 
     if (dadosCarrinho[itemId]) {
-      dadosCarrinho[itemId] += 1;
+      dadosCarrinho[itemId] += 1; 
     } else {
-      // Caso o item não exista, adiciona com quantidade 1
-      dadosCarrinho[itemId] = 1;
+      dadosCarrinho[itemId] = 1; 
     }
 
-    // Atualizando os dados do carrinho no banco de dados
+    // Atualizar o usuário com os novos dados do carrinho
     await usuarioModelo.findByIdAndUpdate(usuarioId, { dadosCarrinho });
 
-    // Retornando a resposta com sucesso e os dados atualizados
-    res.json({
-      success: true,
-      message: "Adicionado ao carrinho",
-      dadosCarrinho,
-    });
+    res.json({ success: true, message: "Adicionou ao carrinho" });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    res.json({ success: false, message: error.message });
   }
 };
+
 
 export const atualizarCarrinho = async (req, res) => {
   try {

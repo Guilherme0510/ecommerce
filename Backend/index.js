@@ -6,11 +6,13 @@ import { usuarioRoute } from './routes/usuarioRoute.js';
 import { produtoRoute } from './routes/produtoRoute.js';
 import {pedidoRoute} from './routes/pedidoRoute.js';
 import {carrinhoRoute}  from './routes/carrinhoRoute.js';
+import { connectCloudinary } from './config/cloudinary.js';
 
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000
 connectDb()
+connectCloudinary()
 
 app.use(cors());
 app.use(express.json());

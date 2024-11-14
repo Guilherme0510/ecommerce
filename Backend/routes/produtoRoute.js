@@ -12,5 +12,5 @@ produtoRoute.post('/addproduto', upload.fields([
 ]), addProduto);
 
 produtoRoute.get('/listaproduto', listaProduto)
-produtoRoute.post('/removerproduto', adminAuth, removerProduto)
+produtoRoute.post('/removerproduto', removerProduto)
 produtoRoute.post('/unico', produtoUnico)

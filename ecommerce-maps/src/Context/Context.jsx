@@ -13,39 +13,52 @@ export const ShopContextProvider = ({ children }) => {
   const currency = "R$";
   const frete = 10;
   const navigate = useNavigate();
-  const [carrinhoItems, setCarrinhoItems] = useState({});
+  const [carrinhoItems, setCarrinhoItems] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [token, setToken] = useState("");
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-  // Função para adicionar item ao carrinho
-  const addParaCarrinho = async (itemId) => {
-    setCarrinhoItems((prevCarrinho) => {
-      const updatedCarrinho = { ...prevCarrinho };
-      updatedCarrinho[itemId] = (updatedCarrinho[itemId] || 0) + 1;
-      return updatedCarrinho;
-    });
-
-    if (token) {
-      try {
-        await axios.post(
-          `${backendUrl}/api/carrinho/addcarrinho`,
-          { itemId },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } catch (error) {
-        console.log(error);
-        toast.error("Erro ao adicionar item ao carrinho. Tente novamente.");
+  const addParaCarrinho = async (item) => {
+    try {
+      let dadosCarrinho = structuredClone(carrinhoItems);
+      // Salvar o id do produto diretamente no banco de dados
+      const itemId = item._id; 
+  
+      if (dadosCarrinho[itemId]) {
+        dadosCarrinho[itemId] += 1;  
+      } else {
+        dadosCarrinho[itemId] = 1;  
       }
+      
+      setCarrinhoItems(dadosCarrinho);
+  
+      console.log("itemId adicionado:", itemId); 
+  
+      if (token) {
+        await axios
+          .post(
+            backendUrl + "/api/carrinho/addcarrinho",
+            { itemId },  
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+          .then((response) => {
+            console.log("Item adicionado ao carrinho:", response.data);
+          })
+          .catch((error) => {
+            console.error("Erro na requisição:", error);
+          });
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar item ao carrinho:", error);
+      toast.error("Erro ao adicionar item ao carrinho. Tente novamente.");
     }
   };
+  
 
-  // Função para contar os itens no carrinho
   const contagemCarrinho = () => {
     return Object.values(carrinhoItems).reduce((acc, count) => acc + count, 0);
   };
 
-  // Função para calcular o valor total do carrinho
   const getCartAmount = () => {
     const produtosMap = produtos.reduce((map, produto) => {
       map[produto._id] = produto;
@@ -62,7 +75,6 @@ export const ShopContextProvider = ({ children }) => {
     }, 0);
   };
 
-  // Função para atualizar a quantidade de um item no carrinho
   const atualizarQuantidade = async (itemId, quantidade) => {
     const carrinhoDados = { ...carrinhoItems, [itemId]: quantidade };
     setCarrinhoItems(carrinhoDados);
@@ -81,10 +93,11 @@ export const ShopContextProvider = ({ children }) => {
     }
   };
 
-  // Função para buscar os dados dos produtos
   const pegarDadosProdutos = async () => {
     try {
-      const response = await axios.get(`${backendUrl}/api/produto/listaproduto`);
+      const response = await axios.get(
+        `${backendUrl}/api/produto/listaproduto`
+      );
       if (response.data.success) {
         setProdutos(response.data.produtos);
       } else {
@@ -96,10 +109,13 @@ export const ShopContextProvider = ({ children }) => {
     }
   };
 
-  // Função para pegar os dados do carrinho do usuário
   const pegarCarrinhoUsuario = async (token) => {
     try {
-     const response = await axios.post(backendUrl + '/api/carrinho/visualizar', {}, {headers: {token }})
+      const response = await axios.post(
+        backendUrl + "/api/carrinho/visualizar",
+        {},
+        { headers: { token } }
+      );
       if (response.data.success) {
         setCarrinhoItems(response.data.dadosCarrinho);
       }
@@ -127,7 +143,6 @@ export const ShopContextProvider = ({ children }) => {
     }
   }, [token]);
 
-  // Valores passados pelo contexto
   const valores = {
     currency,
     frete,
@@ -144,5 +159,7 @@ export const ShopContextProvider = ({ children }) => {
     setCarrinhoItems,
   };
 
-  return <ShopContext.Provider value={valores}>{children}</ShopContext.Provider>;
+  return (
+    <ShopContext.Provider value={valores}>{children}</ShopContext.Provider>
+  );
 };
