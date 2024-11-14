@@ -4,6 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+     "vercel-start": "node index.js",
     "start": "node index.js",            
     "dev": "nodemon index.js"            
   },
