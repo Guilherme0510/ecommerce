@@ -11,26 +11,19 @@ import {
   faBarcode,
   faMoneyBillAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Pedido = () => {
+  const { frete, carrinhoItems, produtos } = useContext(ShopContext);
   const [totalProdutos, setTotalProdutos] = useState(0);
   const [valorTotal, setValorTotal] = useState(0);
-  const { frete } = useContext(ShopContext);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [method, setMethod] = useState(null);
 
-  const produtosCarrinho = [
-    { id: 1, nome: "Pastel de Carne", preco: 19.99 },
-    { id: 2, nome: "Pastel de Queijo", preco: 17.99 },
-    { id: 3, nome: "Pastel de Carne Seca", preco: 21.99 },
-  ];
-
   const [formData, setFormData] = useState({
     primeiroNome: "",
-    sobrenome: "", 
+    sobrenome: "",
     email: "",
     endereco: "",
     numeroCasa: "",
@@ -48,23 +41,30 @@ const Pedido = () => {
   };
 
   const onSubmitHandler = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     toast.success("Compra finalizada com sucesso!");
     console.log(formData);
     console.log(valorTotal);
     console.log(method);
-    
-  }
+  };
 
   useEffect(() => {
-    const total = produtosCarrinho.reduce(
-      (acc, produto) => acc + produto.preco,
-      0
-    );
+    let total = 0;
+
+    const produtosCarrinho = [];
+
+    for (const produtoId in carrinhoItems) {
+      const produto = produtos.find((p) => p._id === produtoId);
+      if (produto && carrinhoItems[produtoId] > 0) {
+        const quantidade = carrinhoItems[produtoId];
+        produtosCarrinho.push({ ...produto, quantidade });
+        total += produto.preco * quantidade;
+      }
+    }
+
     setTotalProdutos(total);
     setValorTotal(total + frete);
-  }, [produtosCarrinho, frete]);
-
+  }, [carrinhoItems, frete, produtos]);
 
   return (
     <form onSubmit={onSubmitHandler}>
@@ -83,14 +83,16 @@ const Pedido = () => {
                 className="border border-gray-300 rounded-md w-full p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 value={formData.primeiroNome}
                 onChange={onChangeHandler}
+                required
               />
               <input
                 type="text"
-                name="sobrenome" 
+                name="sobrenome"
                 placeholder="Sobrenome"
                 className="border border-gray-300 rounded-md w-full p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 value={formData.sobrenome}
                 onChange={onChangeHandler}
+                required
               />
             </div>
 
@@ -101,6 +103,7 @@ const Pedido = () => {
               className="border border-gray-300 rounded-md w-full p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
               value={formData.email}
               onChange={onChangeHandler}
+              required
             />
 
             <div className="flex gap-4">
@@ -111,6 +114,7 @@ const Pedido = () => {
                 className="border border-gray-300 rounded-md w-full p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 value={formData.endereco}
                 onChange={onChangeHandler}
+                required
               />
               <input
                 type="text"
@@ -119,6 +123,7 @@ const Pedido = () => {
                 className="border border-gray-300 rounded-md w-1/4 p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 value={formData.numeroCasa}
                 onChange={onChangeHandler}
+                required
               />
             </div>
 
@@ -130,6 +135,7 @@ const Pedido = () => {
                 className="border border-gray-300 rounded-md w-full p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 value={formData.cidade}
                 onChange={onChangeHandler}
+                required
               />
               <input
                 type="text"
@@ -138,6 +144,7 @@ const Pedido = () => {
                 className="border border-gray-300 rounded-md w-1/4 p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 value={formData.estado}
                 onChange={onChangeHandler}
+                required
               />
             </div>
 
@@ -149,6 +156,7 @@ const Pedido = () => {
                 className="border border-gray-300 rounded-md w-full p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 value={formData.cep}
                 onChange={onChangeHandler}
+                required
               />
               <input
                 type="text"
@@ -157,6 +165,7 @@ const Pedido = () => {
                 className="border border-gray-300 rounded-md w-1/4 p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 value={formData.pais}
                 onChange={onChangeHandler}
+                required
               />
             </div>
 
@@ -167,6 +176,7 @@ const Pedido = () => {
               className="border border-gray-300 rounded-md w-full p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
               value={formData.telefone}
               onChange={onChangeHandler}
+              required
             />
           </div>
 
@@ -175,59 +185,57 @@ const Pedido = () => {
               totalProdutos={totalProdutos}
               valorTotal={valorTotal}
             />
+
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <div
                   onClick={() => setMethod("pix")}
-                  className="flex items-center gap-1 border p-2 cursor-pointer rounded-xl hover:scale-[1.02] hover:bg-gray-100"
+                  className="flex items-center gap-1 border p-2 cursor-pointer rounded-xl"
                 >
                   <p
                     className={`min-w-3.5 h-3.5 border rounded-full ${
                       method === "pix" ? "bg-green-400" : ""
                     }`}
-                  ></p>
+                  />
                   <FontAwesomeIcon icon={faQrcode} className="h-5 mx-4" />
                   <span className="text-gray-500 text-sm font-medium">Pix</span>
                 </div>
 
                 <div
                   onClick={() => setMethod("boleto")}
-                  className="flex items-center gap-1 border p-2 cursor-pointer rounded-xl hover:scale-[1.02] hover:bg-gray-100"
+                  className="flex items-center gap-1 border p-2 cursor-pointer rounded-xl"
                 >
                   <p
                     className={`min-w-3.5 h-3.5 border rounded-full ${
                       method === "boleto" ? "bg-green-400" : ""
                     }`}
-                  ></p>
-                  <FontAwesomeIcon
-                    icon={faCreditCard}
-                    className="h-5 mx-4"
                   />
+                  <FontAwesomeIcon icon={faCreditCard} className="h-5 mx-4" />
                   <span className="text-gray-500 text-sm font-medium">
-                    Crédito
+                    Boleto
                   </span>
                 </div>
 
                 <div
                   onClick={() => setMethod("credito")}
-                  className="flex items-center gap-1 border p-2 cursor-pointer rounded-xl hover:scale-[1.02] hover:bg-gray-100"
+                  className="flex items-center gap-1 border p-2 cursor-pointer rounded-xl"
                 >
                   <p
                     className={`min-w-3.5 h-3.5 border rounded-full ${
                       method === "credito" ? "bg-green-400" : ""
                     }`}
-                  ></p>
+                  />
                   <FontAwesomeIcon icon={faMoneyBillAlt} className="h-5 mx-4" />
                   <span className="text-gray-500 text-sm font-medium">
-                    Pagar na entrega
+                    Crédito
                   </span>
                 </div>
               </div>
 
               <div className="flex justify-end">
                 <button
-                type="submit"
-                  className="bg-gray-700 w-36 h-9 text-white rounded-xl flex items-center justify-center hover:rotate-2 hover:bg-gray-900 transition-all duration-300 ease-in-out"
+                  type="submit"
+                  className="bg-gray-700 w-36 h-9 text-white rounded-xl"
                 >
                   Finalizar Compra
                 </button>

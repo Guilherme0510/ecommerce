@@ -45,13 +45,20 @@ export const atualizarCarrinho = async (req, res) => {
   }
 };
 
-export const carrinhoUsuario = async (req,res) => {
+export const carrinhoUsuario = async (req, res) => {
   try {
-    const { usuarioId } = req.body
-    let dadosCarrinho = await usuarioModelo.findById(usuarioId)
-    res.json({success: true, dadosCarrinho})
+    const { usuarioId } = req.body;
+    let usuario = await usuarioModelo.findById(usuarioId);
+
+    // Verifique se o usuário existe
+    if (!usuario) {
+      return res.json({ success: false, message: "Usuário não encontrado." });
+    }
+
+    // Retorne apenas o campo 'dadosCarrinho'
+    res.json({ success: true, dadosCarrinho: usuario.dadosCarrinho });
   } catch (error) {
     console.log(error);
-    res.json({success: false, message: error.message })
+    res.json({ success: false, message: error.message });
   }
-}
+};

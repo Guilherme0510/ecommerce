@@ -5,5 +5,5 @@ import { addParaCarrinho, atualizarCarrinho, carrinhoUsuario } from '../controll
 export const carrinhoRoute = express.Router() 
 
 carrinhoRoute.post('/addcarrinho', authUsuario ,addParaCarrinho)
-carrinhoRoute.post('/visualizar', authUsuario,carrinhoUsuario )
+carrinhoRoute.post('/visualizar', authUsuario, carrinhoUsuario )
 carrinhoRoute.post('/atualizar', authUsuario, atualizarCarrinho)

@@ -13,7 +13,7 @@ export const ShopContextProvider = ({ children }) => {
   const currency = "R$";
   const frete = 10;
   const navigate = useNavigate();
-  const [carrinhoItems, setCarrinhoItems] = useState([]);
+  const [carrinhoItems, setCarrinhoItems] = useState({});
   const [produtos, setProdutos] = useState([]);
   const [token, setToken] = useState("");
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -56,24 +56,28 @@ export const ShopContextProvider = ({ children }) => {
   
 
   const contagemCarrinho = () => {
-    return Object.values(carrinhoItems).reduce((acc, count) => acc + count, 0);
+    return carrinhoItems ? Object.values(carrinhoItems).reduce((acc, count) => acc + count, 0) : 0;
   };
 
-  const getCartAmount = () => {
-    const produtosMap = produtos.reduce((map, produto) => {
-      map[produto._id] = produto;
-      return map;
-    }, {});
 
-    return Object.keys(carrinhoItems).reduce((totalAmount, itemId) => {
-      const produto = produtosMap[itemId];
-      if (produto) {
-        const quantidade = carrinhoItems[itemId];
-        totalAmount += produto.preco * quantidade;
+const getCartAmount = () => {
+  let totalAmount = 0;
+
+  for (const itemId in cartItems) {
+    let itemInfo = produtos.find((produto) => produto._id === itemId);
+
+    if (itemInfo && cartItems[itemId] > 0) {
+      try {
+        totalAmount += itemInfo.preco * cartItems[itemId];
+      } catch (error) {
+        console.log(`Erro ao processar o item ${itemId}:`, error);
       }
-      return totalAmount;
-    }, 0);
-  };
+    }
+  }
+
+  return totalAmount;
+};
+
 
   const atualizarQuantidade = async (itemId, quantidade) => {
     const carrinhoDados = { ...carrinhoItems, [itemId]: quantidade };
@@ -99,7 +103,7 @@ export const ShopContextProvider = ({ children }) => {
         `${backendUrl}/api/produto/listaproduto`
       );
       if (response.data.success) {
-        setProdutos(response.data.produtos);
+        setProdutos(response.data.lista);
       } else {
         toast.error(response.data.message);
       }
@@ -114,34 +118,33 @@ export const ShopContextProvider = ({ children }) => {
       const response = await axios.post(
         backendUrl + "/api/carrinho/visualizar",
         {},
-        { headers: { token } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      console.log("Carrinho:", response.data.dadosCarrinho); 
+  
       if (response.data.success) {
         setCarrinhoItems(response.data.dadosCarrinho);
+      } else {
+        toast.error(response.data.message || "Erro ao carregar o carrinho.");
       }
     } catch (error) {
       console.log(error);
       toast.error(error.message || "Erro ao carregar o carrinho.");
     }
   };
+  
 
   useEffect(() => {
     pegarDadosProdutos();
   }, []);
 
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    if (savedToken && !token) {
-      setToken(savedToken);
-      pegarCarrinhoUsuario(savedToken);
-    }
-  }, [token]);
+ useEffect(() => {
+  if(!token && localStorage.getItem("token")){
+    setToken(localStorage.getItem("token"))
+    pegarCarrinhoUsuario(localStorage.getItem("token"))
+  }
+ },[])
 
   const valores = {
     currency,
@@ -157,6 +160,7 @@ export const ShopContextProvider = ({ children }) => {
     atualizarQuantidade,
     carrinhoItems,
     setCarrinhoItems,
+    pegarDadosProdutos
   };
 
   return (
