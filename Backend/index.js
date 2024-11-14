@@ -10,14 +10,14 @@ import { connectCloudinary } from './config/cloudinary.js';
 
 dotenv.config();
 const app = express();
-const port = 4000
+const port = process.env.PORT || 4000
 connectDb()
 connectCloudinary()
 
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req,res) => {
+app.get('/', (res) => {
   res.send(`api funcionando`);
 })
 
