@@ -20,79 +20,94 @@ export const ShopContextProvider = ({ children }) => {
 
   const addParaCarrinho = async (item) => {
     try {
-      let dadosCarrinho = structuredClone(carrinhoItems);
-      // Salvar o id do produto diretamente no banco de dados
-      const itemId = item._id; 
-  
-      if (dadosCarrinho[itemId]) {
-        dadosCarrinho[itemId] += 1;  
-      } else {
-        dadosCarrinho[itemId] = 1;  
-      }
-      
-      setCarrinhoItems(dadosCarrinho);
-  
-      console.log("itemId adicionado:", itemId); 
-  
+      const itemId = item._id;
+
       if (token) {
-        await axios
-          .post(
-            backendUrl + "/api/carrinho/addcarrinho",
-            { itemId },  
-            { headers: { Authorization: `Bearer ${token}` } }
-          )
-          .then((response) => {
-            console.log("Item adicionado ao carrinho:", response.data);
-          })
-          .catch((error) => {
-            console.error("Erro na requisição:", error);
-          });
+        // Envia a requisição ao backend
+        const response = await axios.post(
+          `${backendUrl}/api/carrinho/addcarrinho`,
+          { itemId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.success) {
+          // Atualiza o estado do carrinho local apenas em caso de sucesso
+          let dadosCarrinho = structuredClone(carrinhoItems);
+
+          if (dadosCarrinho[itemId]) {
+            dadosCarrinho[itemId] += 1;
+          } else {
+            dadosCarrinho[itemId] = 1;
+          }
+
+          setCarrinhoItems(dadosCarrinho);
+          console.log("Item adicionado ao carrinho:", response.data.message);
+          toast.success("Item adicionado ao carrinho!");
+        } else {
+          console.error("Erro do backend:", response.data.message);
+          toast.error(
+            response.data.message || "Erro ao adicionar item ao carrinho."
+          );
+        }
+      } else {
+        // Caso o usuário não esteja autenticado, atualiza apenas o estado local
+        let dadosCarrinho = structuredClone(carrinhoItems);
+
+        if (dadosCarrinho[itemId]) {
+          dadosCarrinho[itemId] += 1;
+        } else {
+          dadosCarrinho[itemId] = 1;
+        }
+
+        setCarrinhoItems(dadosCarrinho);
+        console.log("Item adicionado ao carrinho localmente.");
+        toast.info("Você precisa estar logado para salvar no servidor.");
       }
     } catch (error) {
       console.error("Erro ao adicionar item ao carrinho:", error);
       toast.error("Erro ao adicionar item ao carrinho. Tente novamente.");
     }
   };
-  
 
   const contagemCarrinho = () => {
-    return carrinhoItems ? Object.values(carrinhoItems).reduce((acc, count) => acc + count, 0) : 0;
+    return carrinhoItems
+      ? Object.values(carrinhoItems).reduce((acc, count) => acc + count, 0)
+      : 0;
   };
 
+  const getCartAmount = () => {
+    let totalAmount = 0;
 
-const getCartAmount = () => {
-  let totalAmount = 0;
+    for (const itemId in cartItems) {
+      let itemInfo = produtos.find((produto) => produto._id === itemId);
 
-  for (const itemId in cartItems) {
-    let itemInfo = produtos.find((produto) => produto._id === itemId);
-
-    if (itemInfo && cartItems[itemId] > 0) {
-      try {
-        totalAmount += itemInfo.preco * cartItems[itemId];
-      } catch (error) {
-        console.log(`Erro ao processar o item ${itemId}:`, error);
+      if (itemInfo && cartItems[itemId] > 0) {
+        try {
+          totalAmount += itemInfo.preco * cartItems[itemId];
+        } catch (error) {
+          console.log(`Erro ao processar o item ${itemId}:`, error);
+        }
       }
     }
-  }
 
-  return totalAmount;
-};
-
+    return totalAmount;
+  };
 
   const atualizarQuantidade = async (itemId, quantidade) => {
-    const carrinhoDados = { ...carrinhoItems, [itemId]: quantidade };
-    setCarrinhoItems(carrinhoDados);
+    let dadosCarrinho = structuredClone(carrinhoItems);
+    dadosCarrinho[itemId] = quantidade;
+    setCarrinhoItems(dadosCarrinho);
 
     if (token) {
       try {
         await axios.post(
-          `${backendUrl}/api/carrinho/atualizar`,
+          backendUrl + "/api/carrinho/atualizar",
           { itemId, quantidade },
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } catch (error) {
         console.log(error);
-        toast.error(error.message || "Erro ao atualizar o carrinho.");
+        toast.error(error.message);
       }
     }
   };
@@ -120,31 +135,24 @@ const getCartAmount = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      console.log("Carrinho:", response.data.dadosCarrinho); 
-  
       if (response.data.success) {
         setCarrinhoItems(response.data.dadosCarrinho);
-      } else {
-        toast.error(response.data.message || "Erro ao carregar o carrinho.");
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message || "Erro ao carregar o carrinho.");
+      toast.error(error.message);
     }
   };
-  
 
   useEffect(() => {
     pegarDadosProdutos();
   }, []);
 
- useEffect(() => {
-  if(!token && localStorage.getItem("token")){
-    setToken(localStorage.getItem("token"))
-    pegarCarrinhoUsuario(localStorage.getItem("token"))
-  }
- },[])
+  useEffect(() => {
+    if (!token && localStorage.getItem("token")) {
+      setToken(localStorage.getItem("token"));
+    }
+  }, []);
 
   const valores = {
     currency,
@@ -160,7 +168,8 @@ const getCartAmount = () => {
     atualizarQuantidade,
     carrinhoItems,
     setCarrinhoItems,
-    pegarDadosProdutos
+    pegarDadosProdutos,
+    pegarCarrinhoUsuario,
   };
 
   return (

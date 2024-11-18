@@ -1,111 +1,119 @@
-import React, { useState } from "react";
-import { images } from "../assets/assets";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCamera,
-  faCartShopping,
-  faTrash,
-} from "@fortawesome/free-solid-svg-icons";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { ShopContext } from "../Context/Context";
+import axios from "axios";
 
 const Perfil = () => {
-  const [selectedImage, setSelectedImage] = useState(images.user);
-  const [pedidosTotais, setPedidosTotais] = useState([
-    { id: 1, img: images.p1, nome: "Pastel de Carne", preco: 19.99 },
-    { id: 2, img: images.p2, nome: "Pastel de Queijo", preco: 17.99 },
-    { id: 3, img: images.p3, nome: "Pastel de Carne Seca", preco: 21.99 },
-    { id: 4, img: images.p4, nome: "Pastel de Frango", preco: 18.99 },
-    { id: 5, img: images.p5, nome: "Pastel de Camarão", preco: 24.99 },
-  ]);
+  const { token, backendUrl, currency } = useContext(ShopContext);
+  const [pedidosTotais, setPedidosTotais] = useState([]);
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setSelectedImage(imageUrl);
+  const pedidosUsuario = async () => {
+    try {
+      if (!token) return null;
+
+      const response = await axios.post(
+        backendUrl + "/api/pedido/pedidousuario",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        let todosPedidos = [];
+
+        // Processar os pedidos
+        for (const pedido of response.data.pedidos) {
+          // Iterar sobre os itens do pedido
+          for (const item of pedido.itens) {
+            // Adicionar informações adicionais ao item
+            item["status"] = pedido.status;
+            item["pagamento"] = pedido.pagamento;
+            item["metodoPagamento"] = pedido.metodoPagamento;
+            item["data"] = pedido.data;
+
+            // Buscar o produto para esse item
+            const produtoResponse = await axios.post(
+              backendUrl + "/api/produto/unico",
+              {
+                id: item.produtoId,
+              }
+            );
+
+            if (produtoResponse.data.success) {
+              item.produto = produtoResponse.data.produto; // Adiciona o produto completo ao item
+            } else {
+              item.produto = {}; // Fallback caso o produto não seja encontrado
+            }
+
+            todosPedidos.push(item);
+          }
+        }
+
+        setPedidosTotais(todosPedidos);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
+  useEffect(() => {
+    pedidosUsuario();
+  }, [token]);
+
+  // Função para formatar o valor em moeda
   return (
     <div className="mt-8">
-      <div className="flex justify-center items-center gap-8">
-        <div className="w-[100px] h-[100px] relative border-4 rounded-full border-yellow-200">
-          <img
-            src={selectedImage}
-            alt="User"
-            className="w-full h-full rounded-full object-cover"
-          />
-          <label
-            htmlFor="img-user"
-            className="absolute bottom-2 right-2 text-blue-700 cursor-pointer text-xl border border-blue-700 rounded-full h-7 w-7 flex items-center justify-center"
-          >
-            <FontAwesomeIcon icon={faCamera} />
-          </label>
-          <input
-            type="file"
-            id="img-user"
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            onChange={handleImageUpload}
-          />
-        </div>
-
-        <div className="flex flex-col items-center justify-center mt-4">
-          <p className="text-3xl">Guilherme Silva</p>
-          <p className="text-lg">guissilval005@gmail.com</p>
-        </div>
-      </div>
-
-      <div className="mx-auto flex flex-col gap-4 px-7 mt-8 bg-yellow-50   p-6 rounded-xl">
-        <h1 className="text-4xl font-semibold my-2 bebas-neue-regular">Meus Pedidos</h1>      
+      <div className="mx-auto flex flex-col gap-4 px-7 mt-8 bg-yellow-50 p-6 rounded-xl">
+        <h1 className="text-4xl font-semibold my-2">Meus Pedidos</h1>
         <div className="flex flex-col gap-2">
-          {pedidosTotais.length > 0 ? (
-            pedidosTotais.map((item, index) => (
+          {pedidosTotais.map((pedido, index) => {
+            console.log(pedidosTotais); // Coloque o console.log dentro do callback de map, antes do JSX
+
+            return (
               <div
-                key={item.id}
+                key={index}
                 className="relative group shadow-sm border-t rounded-s-3xl bg-white"
-                data-aos="fade-up"
-                data-aos-duration="300"
-                data-aos-delay={`${200 + index * 100}`}
               >
-                <div className="flex items-center">
-                  <img
-                    src={item.img}
-                    alt=""
-                    className="object-cover w-[100px] h-full rounded-l-3xl"
-                  />
-                  <div className="flex flex-col mx-auto justify-center items-center gap-4 px-4">
-                    <h1 className="text-2xl">{item.nome}</h1>
-                    <p className="font-semibold">R$ {item.preco}</p>
+                <div className="flex flex-col items-center justify-center gap-6 px-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <div className="flex flex-row items-start gap-4 p-4 border rounded-lg shadow-md">
+                      <img
+                        src={pedido.produto?.imagem[0] || "default_image_url"}
+                        alt={pedido.produto?.nome || "Produto sem nome"}
+                        className="object-cover w-[200px] h-[200px] rounded-lg"
+                      />
+                      <div>
+                        <h2 className="text-2xl font-semibold">
+                          {pedido.produto?.nome ||
+                            "Nome do produto indisponível"}
+                        </h2>
+                        <p className="text-lg">
+                          Quantidade: {pedido.quantidade || "N/A"}
+                        </p>
+                        <p className="text-lg font-semibold">
+                          {currency} {pedido.produto?.preco * pedido.quantidade}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-start gap-4 p-4 border rounded-lg shadow-md">
+                      <h3 className="text-xl font-semibold">
+                        Detalhes do Pedido
+                      </h3>
+                      <p>Status: {pedido.status || "Indefinido"}</p>
+                      <p>Pagamento: {pedido.pagamento ? "Pago" : "Pendente"}</p>
+                      <p>Método de Pagamento: {pedido.metodoPagamento}</p>
+                      <p>
+                        Data do Pedido:{" "}
+                        {new Date(pedido.data).toLocaleDateString() ||
+                          "Indefinido"}
+                      </p>
+                    </div>
                   </div>
-                  
                 </div>
               </div>
-            ))
-          ) : (
-            <p className="text-center">Nenhum produto encontrado</p>
-          )}
+            );
+          })}
         </div>
       </div>
-
-      {pedidosTotais.length > 0 && (
-        <div className="md:hidden fixed bottom-0 left-0 bg-white h-[150px] w-screen flex items-center justify-between px-12 p-4 mx-5 border border-black flex-row rounded-3xl">
-          <div className="flex flex-col gap-4">
-            <h2 className="font-semibold text-lg">
-              Total: R${" "}
-              {pedidosTotais
-                .reduce((total, item) => total + item.preco, 0)
-                .toFixed(2)}
-            </h2>
-            <h2 className="text-lg font-semibold">Quantidade: {pedidosTotais.length}</h2>
-          </div>
-          <Link
-            to={"/carrinho"}
-            className="text-2xl border border-black w-16 h-16 rounded-full flex items-center justify-center"
-          >
-            <FontAwesomeIcon icon={faCartShopping} />
-          </Link>
-        </div>
-      )}
     </div>
   );
 };

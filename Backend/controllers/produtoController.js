@@ -82,13 +82,25 @@ export const removerProduto = async (req,res) => {
   }
 }
 
-export const produtoUnico = async (req,res) => {
+export const produtoUnico = async (req, res) => {
   try {
-    const { id } = req.body
-    const produto = await produtoModel.findById(id)
-    res.json({success: true, produto})
+    const { id } = req.body;
+
+    // Verificar se o ID foi enviado
+    if (!id) {
+      return res.status(400).json({ success: false, message: "ID do produto não fornecido" });
+    }
+
+    const produto = await produtoModel.findById(id);
+
+    // Verificar se o produto existe
+    if (!produto) {
+      return res.status(404).json({ success: false, message: "Produto não encontrado" });
+    }
+
+    res.json({ success: true, produto });
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
-}
+};

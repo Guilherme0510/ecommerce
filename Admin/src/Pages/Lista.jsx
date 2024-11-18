@@ -20,6 +20,8 @@ const Lista = ({ token }) => {
   const ListaProdutos = async () => {
     try {
       const response = await axios.get(backendUrl + "/api/produto/listaproduto");
+      console.log(response.data);
+      
       if (response.data.success) {
         setLista(response.data.lista);
       } else {

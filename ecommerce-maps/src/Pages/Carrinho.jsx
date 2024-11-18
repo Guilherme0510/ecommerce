@@ -13,66 +13,39 @@ const Carrinho = () => {
     produtos,
     carrinhoItems,
     navigate,
-    pegarDadosProdutos,
-    frete,
     atualizarQuantidade,
+    token,
+    pegarCarrinhoUsuario
   } = useContext(ShopContext);
 
-  const [produtosCarrinho, setProdutosCarrinho] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [confirmaExcluir, setConfirmaExcluir] = useState(false);
-
-  const calcularTotalCarrinho = () => {
-    let totalProdutos = 0;
-
-    produtosCarrinho.forEach((item) => {
-      const totalItem = item.produto.preco * item.quantidade;
-      totalProdutos += totalItem;
-    });
-
-    return { totalProdutos, };
-  };
-
-  const { totalProdutos} = calcularTotalCarrinho();
-
-  const excluirPedido = (id) => {
-    toast.info("Produto removido do carrinho.");
-    atualizarQuantidade(id, 0);
-    setConfirmaExcluir(false)
-  };
+  const [dadosCarrinho, setDadosCarrinho] = useState([]);
 
   useEffect(() => {
-    pegarDadosProdutos();
-  }, []);
-
-  useEffect(() => {
-    if (produtos && produtos.length > 0 && carrinhoItems) {
-      const tempData = [];
-      for (const itemId in carrinhoItems) {
-        const produto = produtos.find((produto) => produto._id === itemId);
-        const quantidade = carrinhoItems[itemId];
-
-        if (produto && quantidade > 0) {
-          tempData.push({
-            _id: itemId,
-            quantidade,
-            produto,
-          });
-        }
-      }
-
-      setProdutosCarrinho(tempData);
-      setLoading(false);
+    if (produtos.length > 0 && Object.keys(carrinhoItems).length > 0) {
+      const tempData = Object.keys(carrinhoItems)
+        .map((itemId) => {
+          const produto = produtos.find((produto) => produto._id === itemId);
+          if (produto) {
+            return {
+              ...produto,
+              quantidade: carrinhoItems[itemId],
+            };
+          }
+          return null;  // Garante que itens inexistentes sejam descartados
+        })
+        .filter(Boolean); // Remove itens nulos (caso algum produto não seja encontrado)
+    
+      setDadosCarrinho(tempData);
     }
-  }, [produtos, carrinhoItems]);
-
+  }, [carrinhoItems, produtos]);
+  
+  
   useEffect(() => {
-    atualizarQuantidade();
+    if (!token && localStorage.getItem("token")) {
+      pegarCarrinhoUsuario(localStorage.getItem("token"))
+    }
   }, []);
 
-  if (loading) {
-    return <div>Carregando...</div>;
-  }
   return (
     <div className="mx-auto mt-10 flex flex-col gap-8 md:gap-2">
       <div className="flex justify-center items-center">
@@ -84,9 +57,16 @@ const Carrinho = () => {
 
       <div className="flex flex-col justify-center items-center md:justify-between md:flex-row mt-10 gap-12">
         <div className="w-[calc(100%-100px)] md:w-2/4">
-          {produtosCarrinho.length > 0 ? (
-            produtosCarrinho.map((item, index) => {
-              const dadosProduto = item.produto;
+          {dadosCarrinho.length > 0 ? (
+            dadosCarrinho.map((item, index) => {
+              const dadosProduto = produtos.find(
+                (produto) => produto._id.toString() === item._id.toString()
+              );
+              console.log(dadosCarrinho);
+              console.log(dadosProduto);
+              console.log(carrinhoItems);
+              
+              
               return (
                 <div
                   key={index}
@@ -100,7 +80,8 @@ const Carrinho = () => {
                   <div>
                     <h3 className="text-lg">{dadosProduto.nome}</h3>
                     <p>
-                      R$ {dadosProduto.preco.toFixed(2)} x {item.quantidade}
+                      R$ {dadosProduto.preco.toFixed(2)} 
+                      {/* x {item.quantidade} */}
                     </p>
                     <p>
                       Total: R${" "}
@@ -113,32 +94,8 @@ const Carrinho = () => {
                       className="text-red-500 cursor-pointer hover:rotate-[20deg] transition-all duration-100 ease-in hover:text-red-700"
                       data-tooltip-id="lixeira"
                       data-tooltip-content="Excluir"
-                      onClick={() =>setConfirmaExcluir(true)}
                     />
                     <Tooltip id="lixeira" />
-
-                    {confirmaExcluir && (
-                      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-80 shadow-lg">
-                          <h3 className="text-lg mb-4 text-center">
-                            Tem certeza que deseja remover o produto do
-                            carrinho?
-                          </h3>
-                          <div className="flex justify-around">
-                            <button
-                             onClick={() => excluirPedido(item._id)} 
-                            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
-                              Sim
-                            </button>
-                            <button 
-                            onClick={() =>setConfirmaExcluir(false)}
-                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
-                              Não
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                     <input
                       type="number"
                       className="border w-10 rounded-xl text-center"
@@ -146,6 +103,7 @@ const Carrinho = () => {
                       onChange={(e) =>
                         atualizarQuantidade(item._id, parseInt(e.target.value))
                       }
+                      disabled
                     />
                   </div>
                 </div>
@@ -155,12 +113,12 @@ const Carrinho = () => {
             <p>Seu carrinho está vazio!</p>
           )}
         </div>
-
+        ;
         <div className="w-[calc(100%-100px)] md:w-1/4 flex flex-col gap-5">
-          <TotalCarrinho
+          {/* <TotalCarrinho
             totalProdutos={totalProdutos}
             valorTotal={totalProdutos + frete}
-          />
+          /> */}
           <div className="flex justify-end">
             <button
               onClick={() => navigate("/fazer-pedido")}

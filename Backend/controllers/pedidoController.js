@@ -1,5 +1,6 @@
 import pedidoModel from "../models/pedidoModel.js";
 import usuarioModelo from "../models/usuarioModel.js";
+import produtoModel from "../models/produtoModel.js";
 import gerencianet from 'sdk-node-apis-efi'; 
 import Stripe from 'stripe'
 
@@ -17,14 +18,13 @@ const fazerPedido = async (req, res) => {
   try {
     const { usuarioId, itens, quantidade, endereco, metodoPagamento } = req.body;
 
-    // PNE = Pagar na entrega
     const pedidoDados = {
       usuarioId,
       itens,
       quantidade,
       endereco,
-      metodoPagamento: "PNE", 
-      pagamento: false,
+      metodoPagamento, // Valor dinâmico vindo do frontend
+      pagamento: false, // Inicialmente como falso
       data: Date.now(),
     };
 
@@ -32,6 +32,8 @@ const fazerPedido = async (req, res) => {
     await novoPedido.save();
 
     await usuarioModelo.findByIdAndUpdate(usuarioId, { dadosCarrinho: {} });
+
+    res.json({ success: true, message: 'Pedido realizado com sucesso!' });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -112,13 +114,29 @@ const verificarStripe = async (req, res) => {
   }
 };
 
-
-
 const pedidosUsuarios = async (req, res) => {
   try {
     const { usuarioId } = req.body;
-    const pedidos = await pedidoModel.findById({ usuarioId });
-    res.json({ success: true, pedidos });
+
+    // Encontrar os pedidos do usuário
+    const pedidos = await pedidoModel.find({ usuarioId });
+
+    if (!pedidos || pedidos.length === 0) {
+      return res.json({ success: false, message: "Nenhum pedido encontrado" });
+    }
+
+    const pedidosComProdutos = await Promise.all(pedidos.map(async (pedido) => {
+      const produtosDetalhados = await Promise.all(pedido.itens.map(async (idProduto) => {
+        const produto = await produtoModel.findById(idProduto);  // Supondo que o modelo de produto seja 'produtoModel'
+        return produto; // Retorna o produto com todos os detalhes
+      }));
+
+      // Retornar o pedido com os produtos detalhados
+      return { ...pedido.toObject(), produtos: produtosDetalhados };
+    }));
+
+    // Retornar os pedidos com os produtos incluídos
+    res.json({ success: true, pedidos: pedidosComProdutos });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -128,7 +146,7 @@ const pedidosUsuarios = async (req, res) => {
 const todosPedidos = async (req, res) => {
   try {
     const pedidos = await pedidoModel.find({});
-    res.json({ success: true, message: pedidos });
+    res.json({ success: true, pedidos });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });

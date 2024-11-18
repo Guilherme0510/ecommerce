@@ -10,8 +10,8 @@ pedidoRoute.post('/pix', gerenciaNetPix);
 pedidoRoute.post('/stripe', authUsuario, fazerPedidoStripe)
 
 
-pedidoRoute.post('/lista', adminAuth, todosPedidos )
-pedidoRoute.post('/status', adminAuth, atualizarStatus)
+pedidoRoute.post('/lista', todosPedidos )
+pedidoRoute.post('/status', atualizarStatus)
 
 pedidoRoute.post('/pedidousuario', authUsuario, pedidosUsuarios)
 

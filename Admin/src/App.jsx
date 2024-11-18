@@ -6,6 +6,7 @@ import Navbar from "./Components/Navbar";
 import Add from "./Pages/Add";
 import Login from "./Pages/Login";
 import Lista from "./Pages/Lista";
+import Entrega from "./Pages/Entrega";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 export const moeda = "R$";
@@ -32,6 +33,7 @@ const App = () => {
               <Routes>
                 <Route path="/add" element={<Add token={token} />} />
                 <Route path="/lista" element={<Lista token={token} />} />
+                <Route path="/status" element={<Entrega token={token} />} />
               </Routes>
             </div>
           </div>
