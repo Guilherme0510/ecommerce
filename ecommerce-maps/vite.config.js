@@ -1,14 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/', // Define a base para rotas relativas (use '/' para SPAs hospedadas na raiz)
+  base: './', // Use caminhos relativos para funcionar corretamente
   build: {
-    outDir: 'dist', // Diretório de saída padrão
-  },
-  server: {
-    host: true, // Permite acessar em outros dispositivos na mesma rede
+    outDir: 'dist', // Confirma que o Vite gera arquivos na pasta 'dist'
   },
 });
