@@ -29,7 +29,7 @@ const App = () => {
         <>
           <div className="flex flex-col md:flex-row sm:items-start justify-center items-center w-full">
             <Navbar setToken={setToken} />
-            <div className="md:w-[70%] w-full mx-auto ml-[max(5vw,25px)] my-8 text-gray-600 text-base">
+            <div className="md:w-[70%] w-full mx-auto md:ml-[max(5vw,25px)] ml-0 my-8 text-gray-600 text-base">
               <Routes>
                 <Route path="/add" element={<Add token={token} />} />
                 <Route path="/lista" element={<Lista token={token} />} />
