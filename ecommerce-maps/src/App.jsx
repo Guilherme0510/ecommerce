@@ -20,6 +20,8 @@ import Sobre from "./Pages/Sobre";
 import Contato from "./Pages/Contato";
 import Login from "./Pages/Login";
 
+import { Analytics } from '@vercel/analytics/react';
+
 const App = () => {
   const location = useLocation();
 
@@ -59,6 +61,7 @@ const App = () => {
         location.pathname !== "/carrinho" &&
         location.pathname !== "/contato" &&
         location.pathname !== "/login" && <Footer />}
+        <Analytics />
     </div>
   );
 };
