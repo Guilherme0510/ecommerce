@@ -27,7 +27,7 @@ const App = () => {
         <Login setToken={setToken} />
       ) : (
         <>
-          <div className="flex w-full">
+          <div className="flex flex-col md:flex-row sm:items-start justify-center items-center w-full">
             <Navbar setToken={setToken} />
             <div className="w-[70%] mx-auto ml-[max(5vw,25px)] my-8 text-gray-600 text-base">
               <Routes>

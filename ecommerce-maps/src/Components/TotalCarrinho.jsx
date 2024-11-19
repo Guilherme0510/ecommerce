@@ -5,6 +5,8 @@ import Texto from "./Texto";
 const TotalCarrinho = ({ totalProdutos, valorTotal }) => {
   const { currency, frete, navigate } = useContext(ShopContext);
 
+  valorTotal = totalProdutos + frete
+
   return (
     <>
       <Texto text1={"TOTAL"} text2={"CARRINHO"} />

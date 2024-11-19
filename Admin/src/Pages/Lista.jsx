@@ -110,7 +110,7 @@ const Lista = ({ token }) => {
       </div>
 
       <div className="my-4">
-        <div className="flex space-x-6">
+        <div className="flex flex-col md:flex-row items-start justify-start gap-3 md:gap-6">
           <div className="flex gap-3 items-center">
             <label>Pesquisar produto:</label>
             <input
@@ -161,7 +161,7 @@ const Lista = ({ token }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center py-2 px-2 bg-orange-200 my-2 rounded-lg">
+      <div className="grid md:grid-cols-[1fr_3fr_1fr_1fr_1fr] grid-cols-[1fr_2fr_1fr_1fr_1fr] items-center py-2 px-2 bg-orange-200 my-2 rounded-lg">
         <p>Imagem</p>
         <p>Nome</p>
         <p>Categoria</p>

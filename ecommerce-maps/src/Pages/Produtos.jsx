@@ -19,6 +19,7 @@ const Produtos = () => {
   const [showFilter, setShowFilter] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchBar, setSearchBar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(""); // Variável para armazenar o texto da pesquisa
   const [sortOption, setSortOption] = useState("relevante");
   const [produtos, setProdutos] = useState([]);
   const itemsPerPage = 8;
@@ -41,7 +42,7 @@ const Produtos = () => {
     };
 
     fetchProdutos();
-  }, []);
+  }, [backendUrl]);
 
   const toggleCategory = (e) => {
     const value = e.target.value;
@@ -52,29 +53,29 @@ const Produtos = () => {
     );
   };
 
-  // Garantir que filteredProducts seja sempre um array
-  const filteredProducts =
-    Array.isArray(produtos) && selectedCategories.length > 0
-      ? produtos.filter((produto) =>
-          selectedCategories.includes(produto.categoria)
-        )
-      : produtos;
+  // Filtrando os produtos com base na pesquisa e categorias selecionadas
+  const filteredProducts = produtos.filter((produto) => {
+    const matchesCategory =
+      selectedCategories.length === 0 ||
+      selectedCategories.includes(produto.categoria);
+    const matchesSearch =
+      produto.nome.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   // Ordenação dos produtos
-  const sortedProducts = Array.isArray(filteredProducts)
-    ? filteredProducts.sort((a, b) => {
-        if (sortOption === "relevante") {
-          return a.id - b.id;
-        }
-        if (sortOption === "crescente") {
-          return a.preco - b.preco;
-        }
-        if (sortOption === "decrescente") {
-          return b.preco - a.preco;
-        }
-        return 0;
-      })
-    : [];
+  const sortedProducts = filteredProducts.sort((a, b) => {
+    if (sortOption === "relevante") {
+      return new Date(b.dataCriacao) - new Date(a.dataCriacao); // Ordena pela data de criação
+    }
+    if (sortOption === "crescente") {
+      return a.preco - b.preco;
+    }
+    if (sortOption === "decrescente") {
+      return b.preco - a.preco;
+    }
+    return 0;
+  });
 
   const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -102,22 +103,20 @@ const Produtos = () => {
         >
           <p className="mb-3 text-lg font-medium">CATEGORIAS</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            {["Carne", "Queijo", "Frango", "Vegetais", "Frutos do Mar"].map(
-              (label) => (
-                <label
-                  key={label}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    value={label}
-                    onChange={toggleCategory}
-                    className="appearance-none h-4 w-4 border-2 border-gray-300 rounded-full transition duration-200 cursor-pointer checked:bg-blue-500 checked:border-transparent focus:outline-none shadow-sm"
-                  />
-                  <span>{label}</span>
-                </label>
-              )
-            )}
+            {["homem", "mulher"].map((label) => (
+              <label
+                key={label}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  value={label}
+                  onChange={toggleCategory}
+                  className="appearance-none h-4 w-4 border-2 border-gray-300 rounded-full transition duration-200 cursor-pointer checked:bg-blue-500 checked:border-transparent focus:outline-none shadow-sm"
+                />
+                <span>{label.toUpperCase()}</span>
+              </label>
+            ))}
           </div>
         </div>
       </div>
@@ -149,6 +148,8 @@ const Produtos = () => {
               type="text"
               placeholder="Digite o que precisa"
               className="border border-black rounded-lg py-1 px-4 w-3/5 hover:border-yellow-700 hover:border-2"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)} // Atualizando a pesquisa
             />
             <FontAwesomeIcon
               icon={faSearch}
@@ -175,7 +176,7 @@ const Produtos = () => {
                 produtoId={item._id}
                 image={item.imagem[0]}
                 name={item.nome}
-                preco={item.preco}
+                preco={item.preco.toFixed(2)}
                 size="h-40 w-44 md:h-64 md:w-56"
               />
             </div>

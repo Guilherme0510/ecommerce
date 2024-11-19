@@ -104,7 +104,7 @@ const Navbar = () => {
             aria-hidden="true"
           />
           <span className="absolute bottom-0 left-3 px-1 text-[10px] font-semibold rounded-full bg-yellow-600 text-white">
-            {/* {contagemCarrinho()} */}
+            {contagemCarrinho()}
           </span>
           <Tooltip id="carrinhoTooltip" place="top" effect="solid">
             Carrinho

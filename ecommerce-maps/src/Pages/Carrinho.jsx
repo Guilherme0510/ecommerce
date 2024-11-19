@@ -15,11 +15,14 @@ const Carrinho = () => {
     navigate,
     atualizarQuantidade,
     token,
-    pegarCarrinhoUsuario
+    pegarCarrinhoUsuario,
+    setCarrinhoItems, // Assumindo que você tenha a função setCarrinhoItems no contexto
   } = useContext(ShopContext);
 
   const [dadosCarrinho, setDadosCarrinho] = useState([]);
+  const [totalCarrinho, setTotalCarrinho] = useState(0); // Estado para o total do carrinho
 
+  // Função para sincronizar o carrinho com os dados do contexto
   useEffect(() => {
     if (produtos.length > 0 && Object.keys(carrinhoItems).length > 0) {
       const tempData = Object.keys(carrinhoItems)
@@ -31,20 +34,20 @@ const Carrinho = () => {
               quantidade: carrinhoItems[itemId],
             };
           }
-          return null;  // Garante que itens inexistentes sejam descartados
+          return null; // Garante que itens inexistentes sejam descartados
         })
         .filter(Boolean); // Remove itens nulos (caso algum produto não seja encontrado)
     
       setDadosCarrinho(tempData);
+
+      // Calcular o total do carrinho
+      const total = tempData.reduce(
+        (acc, item) => acc + item.preco * item.quantidade,
+        0
+      );
+      setTotalCarrinho(total); // Atualiza o total
     }
-  }, [carrinhoItems, produtos]);
-  
-  
-  useEffect(() => {
-    if (!token && localStorage.getItem("token")) {
-      pegarCarrinhoUsuario(localStorage.getItem("token"))
-    }
-  }, []);
+  }, [carrinhoItems, produtos, setCarrinhoItems]); // Atualiza dadosCarrinho e totalCarrinho sempre que carrinhoItems ou produtos mudam
 
   return (
     <div className="mx-auto mt-10 flex flex-col gap-8 md:gap-2">
@@ -62,11 +65,6 @@ const Carrinho = () => {
               const dadosProduto = produtos.find(
                 (produto) => produto._id.toString() === item._id.toString()
               );
-              console.log(dadosCarrinho);
-              console.log(dadosProduto);
-              console.log(carrinhoItems);
-              
-              
               return (
                 <div
                   key={index}
@@ -113,12 +111,11 @@ const Carrinho = () => {
             <p>Seu carrinho está vazio!</p>
           )}
         </div>
-        ;
+
+        {/* Exibição do total do carrinho */}
         <div className="w-[calc(100%-100px)] md:w-1/4 flex flex-col gap-5">
-          {/* <TotalCarrinho
-            totalProdutos={totalProdutos}
-            valorTotal={totalProdutos + frete}
-          /> */}
+          <TotalCarrinho totalProdutos={totalCarrinho} />
+
           <div className="flex justify-end">
             <button
               onClick={() => navigate("/fazer-pedido")}

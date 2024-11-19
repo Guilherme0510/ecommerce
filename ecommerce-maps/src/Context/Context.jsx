@@ -70,10 +70,26 @@ export const ShopContextProvider = ({ children }) => {
   };
 
   const contagemCarrinho = () => {
-    return carrinhoItems
-      ? Object.values(carrinhoItems).reduce((acc, count) => acc + count, 0)
-      : 0;
+    let totalCount = 0;
+  
+    // Itera sobre os itens do carrinho
+    for (const itemId in carrinhoItems) {
+      const quantidade = carrinhoItems[itemId]; // Considera a quantidade do item sem considerar o tamanho
+    
+      try {
+        // Verifica se a quantidade é um número válido e maior que 0
+        if (typeof quantidade === 'number' && quantidade > 0) {
+          totalCount += quantidade;
+        }
+      } catch (error) {
+        console.log(`Erro ao processar o item ${itemId}:`, error);
+      }
+    }
+  
+    console.log('Total de itens no carrinho:', totalCount); 
+    return totalCount;
   };
+  
 
   const getCartAmount = () => {
     let totalAmount = 0;
@@ -151,6 +167,7 @@ export const ShopContextProvider = ({ children }) => {
   useEffect(() => {
     if (!token && localStorage.getItem("token")) {
       setToken(localStorage.getItem("token"));
+      pegarCarrinhoUsuario(localStorage.getItem('token'))
     }
   }, []);
 

@@ -16,7 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
 const Pedido = () => {
-  const { frete, carrinhoItems, produtos, backendUrl,token } = useContext(ShopContext);
+  const { frete, carrinhoItems, produtos, backendUrl,token, navigate } = useContext(ShopContext);
   const [totalProdutos, setTotalProdutos] = useState(0);
   const [valorTotal, setValorTotal] = useState(0);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -86,6 +86,8 @@ const Pedido = () => {
       toast.error("Erro ao realizar o pedido!");
       console.error(error); // Log de erro detalhado
     }
+
+    navigate('/perfil')
   };
   
 

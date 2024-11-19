@@ -12,20 +12,3 @@
 * {
   font-family: "Bebas Neue", sans-serif;
 }
-
-.animacao-navbar {
-  transition: transform 1s ease, rotate 1s ease;
-}
-
-.animacao-navbar:hover {
-  transform: translateX(-80px) rotate(360deg);
-}
-
-@keyframes rolagemIcon {
-  from {
-    transform: translateX(0) rotate(0deg);
-  }
-  to {
-    transform: translateX(-80px) rotate(360deg);
-  }
-}
