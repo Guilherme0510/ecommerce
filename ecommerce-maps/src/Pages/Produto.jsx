@@ -47,7 +47,7 @@ const Produto = () => {
   return (
     <div className="container mx-auto p-4 flex flex-col lg:flex-row">
       <div className="w-full">
-        <div className="flex gap-10">
+        <div className="flex flex-col md:flex-row gap-10">
           <img
             src={imagemPrincipal}
             alt={produto.nome}
