@@ -16,3 +16,6 @@ pedidoRoute.post('/status', atualizarStatus)
 pedidoRoute.post('/pedidousuario', authUsuario, pedidosUsuarios)
 
 pedidoRoute.post('/verificarstripe', authUsuario, verificarStripe)
+
+
+pedidoRoute.post('/cobranca', gerenciaNetPix);
