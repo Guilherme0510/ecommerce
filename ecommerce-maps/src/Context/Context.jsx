@@ -17,13 +17,14 @@ export const ShopContextProvider = ({ children }) => {
   const [produtos, setProdutos] = useState([]);
   const [token, setToken] = useState("");
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const [loading, setLoading] = useState(false);
 
   const addParaCarrinho = async (item) => {
     try {
+      setLoading(true); // Inicia o loading
       const itemId = item._id;
 
       if (token) {
-        // Envia a requisição ao backend
         const response = await axios.post(
           `${backendUrl}/api/carrinho/addcarrinho`,
           { itemId },
@@ -31,7 +32,6 @@ export const ShopContextProvider = ({ children }) => {
         );
 
         if (response.data.success) {
-          // Atualiza o estado do carrinho local apenas em caso de sucesso
           let dadosCarrinho = structuredClone(carrinhoItems);
 
           if (dadosCarrinho[itemId]) {
@@ -41,16 +41,11 @@ export const ShopContextProvider = ({ children }) => {
           }
 
           setCarrinhoItems(dadosCarrinho);
-          console.log("Item adicionado ao carrinho:", response.data.message);
           toast.success("Item adicionado ao carrinho!");
         } else {
-          console.error("Erro do backend:", response.data.message);
-          toast.error(
-            response.data.message || "Erro ao adicionar item ao carrinho."
-          );
+          toast.error(response.data.message || "Erro ao adicionar item ao carrinho.");
         }
       } else {
-        // Caso o usuário não esteja autenticado, atualiza apenas o estado local
         let dadosCarrinho = structuredClone(carrinhoItems);
 
         if (dadosCarrinho[itemId]) {
@@ -60,12 +55,12 @@ export const ShopContextProvider = ({ children }) => {
         }
 
         setCarrinhoItems(dadosCarrinho);
-        console.log("Item adicionado ao carrinho localmente.");
         toast.info("Você precisa estar logado para salvar no servidor.");
       }
     } catch (error) {
-      console.error("Erro ao adicionar item ao carrinho:", error);
       toast.error("Erro ao adicionar item ao carrinho. Tente novamente.");
+    } finally {
+      setLoading(false); // Finaliza o loading
     }
   };
 
@@ -130,17 +125,17 @@ export const ShopContextProvider = ({ children }) => {
 
   const pegarDadosProdutos = async () => {
     try {
-      const response = await axios.get(
-        `${backendUrl}/api/produto/listaproduto`
-      );
+      setLoading(true); // Inicia o loading
+      const response = await axios.get(`${backendUrl}/api/produto/listaproduto`);
       if (response.data.success) {
         setProdutos(response.data.lista);
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.log(error);
       toast.error("Erro ao buscar produtos.");
+    } finally {
+      setLoading(false); // Finaliza o loading
     }
   };
 
@@ -187,6 +182,7 @@ export const ShopContextProvider = ({ children }) => {
     setCarrinhoItems,
     pegarDadosProdutos,
     pegarCarrinhoUsuario,
+    loading
   };
 
   return (

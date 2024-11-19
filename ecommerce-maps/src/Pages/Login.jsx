@@ -12,9 +12,11 @@ const Login = () => {
   const [senha, setSenha] = useState("");
   const [form, setForm] = useState("Cadastre-se");
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [loading, setLoading] = useState(false); // Estado de loading
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    setLoading(true); // Começa o carregamento
     try {
       if (form === "Cadastre-se") {
         const response = await axios.post(backendUrl + "/api/user/registrar", {
@@ -34,17 +36,17 @@ const Login = () => {
           senha,
         });
         if (response.data.success) {
-          setToken(response.data.token)
-          localStorage.setItem('token', response.data.token)
-          console.log(response.data);
+          setToken(response.data.token);
+          localStorage.setItem('token', response.data.token);
+        } else {
+          toast.error(response.data.message);
         }
-        else{
-          toast.error(response.data.message)
-        } 
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message)
+      toast.error(error.message);
+    } finally {
+      setLoading(false); // Fim do carregamento
     }
 
     setNome("");
@@ -62,9 +64,9 @@ const Login = () => {
 
   useEffect(() => {
     if (token) {
-      navigate('/')
-    } 
-  },[token])
+      navigate('/');
+    }
+  }, [token]);
 
   return (
     <form onSubmit={onSubmitHandler}>
@@ -115,9 +117,9 @@ const Login = () => {
             </div>
 
             {/* Exibir botão de submit apenas se for login */}
-            <button className="bg-black text-white font-light px-8 py-2 mt-4 rounded-lg hover:scale-[1.02] hover:mt-3">
-        {form === "Login" ? "Login" : "Cadastre-se"}
-      </button>
+            <button className="bg-black text-white font-light px-8 py-2 mt-4 rounded-lg hover:scale-[1.02] hover:mt-3" disabled={loading}>
+              {loading ? "Carregando..." : form === "Login" ? "Login" : "Cadastre-se"}
+            </button>
           </div>
           <ToastContainer />
         </div>
