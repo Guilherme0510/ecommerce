@@ -14,6 +14,7 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import ModalQRCode from "../Components/QrCode";
 
 const Pedido = () => {
   const { frete, carrinhoItems, produtos, backendUrl,token, navigate } = useContext(ShopContext);
@@ -22,10 +23,15 @@ const Pedido = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [method, setMethod] = useState(null);
 
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [copiaEColaPix, setCopiaEColaPix] = useState('');
+
   const [formData, setFormData] = useState({
     primeiroNome: "",
     sobrenome: "",
     email: "",
+    cpf: '',
     endereco: "",
     numeroCasa: "",
     cidade: "",
@@ -43,9 +49,7 @@ const Pedido = () => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-  
-    // Preparar os itens para o pedido
-    let itensPedido = [];
+      let itensPedido = [];
     for (const [itemId, quantidade] of Object.entries(carrinhoItems)) {
       if (quantidade > 0) {
         const itemInfo = produtos.find((produto) => produto._id === itemId);
@@ -58,36 +62,58 @@ const Pedido = () => {
         }
       }
     }
-  
-    // Criar objeto do pedido
+    const nomeCompleto = formData.primeiroNome + ' ' + formData.sobrenome;
+
     const pedidoData = {
       usuarioId: formData.email,
       itens: itensPedido,
       endereco: { ...formData },
       metodoPagamento: method,
-      pagamento: true,
+      pagamento: false,
+      cpf: formData.cpf,
+      nome: nomeCompleto
+
     };
-  
+    
+    console.log("Pedido enviado para gerar o QR Code:", pedidoData);
+
     try {
-      // Enviar pedido para a API
-      const response = await axios.post(backendUrl + '/api/pedido/fazer_pedido', pedidoData, {
-        headers: { "Authorization": `Bearer ${token}` },
-      });
-  
-      console.log(response.data); // Depuração para verificar a resposta
-  
-      // Verificar se o pedido foi criado com sucesso
-      if (response.data.success) {  // Verifique se a resposta contém um campo 'success'
-        toast.success("Pedido realizado com sucesso!");
-      } else {
-        toast.error(response.data.message || "Erro ao realizar o pedido!");
+      switch (method) {
+        case 'pix':
+          try {
+            const response = await axios.post(backendUrl + '/api/pedido/pix-qr-code', pedidoData, {
+              headers: {
+                "Authorization": `Bearer ${token}`,
+              },
+            });
+        
+            console.log(response.data);
+            toast.success("QR Code gerado com sucesso!");
+        
+            const qrCode = response.data.imagemQrcode;
+            const copiaEColaPix = response.data.qrcode;
+            setCopiaEColaPix(copiaEColaPix)
+            setQrCodeUrl(qrCode);
+            setShowModal(true);
+        
+          } catch (error) {
+            toast.error("Erro ao gerar QR Code!");
+            console.error(error.message);
+          }
+          break;
+    
+        default:
+          toast.error("Método de pagamento desconhecido.");
+          break;
       }
     } catch (error) {
-      toast.error("Erro ao realizar o pedido!");
-      console.error(error); // Log de erro detalhado
+      toast.error("Erro ao processar o pedido!");
+      console.error(error); 
     }
+    
+      
 
-    navigate('/perfil')
+    // navigate('/perfil')
   };
   
 
@@ -139,6 +165,16 @@ const Pedido = () => {
                 required
               />
             </div>
+            
+            <input
+              type="number"
+              name="cpf"
+              placeholder="Digite seu CPF (Apenas Números)"
+              className="border border-gray-300 rounded-md w-full p-3 text-gray-800 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
+              value={formData.cpf}
+              onChange={onChangeHandler}
+              required
+            />
 
             <input
               type="email"
@@ -288,6 +324,12 @@ const Pedido = () => {
           </div>
         </div>
       </div>
+      <ModalQRCode
+          showModal={showModal}
+          qrCodeUrl={qrCodeUrl}
+          copiaECola={copiaEColaPix}
+          closeModal={() => setShowModal(false)} 
+        />
     </form>
   );
 };

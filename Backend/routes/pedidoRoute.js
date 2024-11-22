@@ -6,7 +6,7 @@ import adminAuth from '../middleware/admin_auth.js'
 export const pedidoRoute = express.Router() 
 
 pedidoRoute.post('/fazer_pedido', authUsuario, fazerPedido)
-pedidoRoute.post('/pix', gerenciaNetPix);
+pedidoRoute.post('/pix-qr-code', gerenciaNetPix);
 pedidoRoute.post('/stripe', authUsuario, fazerPedidoStripe)
 
 
