@@ -36,4 +36,4 @@ app.get('/', (req,res) => {
 export default app;
 
 
-// app.listen(port, () => console.log("Rodando na porta " + port));
+app.listen(port, () => console.log("Rodando na porta " + port));
