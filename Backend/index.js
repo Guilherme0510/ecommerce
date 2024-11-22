@@ -29,10 +29,8 @@ app.use("/api/produto", produtoRoute);
 app.use("/api/pedido", pedidoRoute);
 app.use("/api/carrinho", carrinhoRoute);
 
-// Certificados HTTPS
 app.get('/', (req,res) => {
   res.send('api funcionando')
 })
 
-// Inicializar o servidor
 app.listen(port, () => console.log("Rodando na porta " + port));
