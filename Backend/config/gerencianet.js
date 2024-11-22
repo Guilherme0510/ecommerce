@@ -7,10 +7,13 @@ dotenv.config();
 export const gerenciaNetConfig = async () => {
   const certificado = fs.readFileSync("certs/producao-630873-ecommerce-maps.p12");
 
+  console.log(certificado);
+  
+
   const gerenciaNetClient = new EfiPay({
     client_id: process.env.GN_CLIENT_ID,
     client_secret: process.env.GN_CLIENT_SECRET,
-    sandbox: process.env.GN_ENV === 'false', 
+    sandbox: false, 
     certificate: certificado,
   });
 
