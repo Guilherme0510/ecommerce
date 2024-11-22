@@ -43,7 +43,7 @@ const fazerPedido = async (req, res) => {
   }
 };
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_PROD);
 const fazerPedidoStripe = async (req, res) => {
   try {
     const { usuarioId, itens, endereco, metodoPagamento } = req.body;
@@ -207,7 +207,7 @@ const gerenciaNetPix = async (req, res) => {
   try {
     console.log("Dados recebidos no body:", req.body);
 
-    const certPath = path.join(process.cwd(), "certs", process.env.CERTIFICADO);
+    const certPath = path.join(process.cwd(), "certs", process.env.CERTIFICADO_PROD);
     const certBuffer = fs.readFileSync(certPath);
 
     const agent = new https.Agent({
@@ -216,12 +216,12 @@ const gerenciaNetPix = async (req, res) => {
     });
 
     const credentials = Buffer.from(
-      `${process.env.CHAVE_CLIENT_ID}:${process.env.CHAVE_CLIENT_SECRET}`
+      `${process.env.CHAVE_CLIENT_ID_PROD}:${process.env.CHAVE_CLIENT_SECRET_PROD}`
     ).toString("base64");
 
     const authResponse = await axios({
       method: "POST",
-      url: `${process.env.ENDPOINT}/oauth/token`,
+      url: `${process.env.ENDPOINT_PROD}/oauth/token`,
       headers: {
         Authorization: `Basic ${credentials}`,
         "Content-Type": "application/json",
@@ -237,7 +237,7 @@ const gerenciaNetPix = async (req, res) => {
     const accessToken = authResponse.data?.access_token;
 
     const reqGN = axios.create({
-      baseURL: process.env.ENDPOINT,
+      baseURL: process.env.ENDPOINT_PROD,
       httpsAgent: agent,
       headers: {
         Authorization: `Bearer ${accessToken}`,
