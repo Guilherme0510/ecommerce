@@ -33,4 +33,7 @@ app.get('/', (req,res) => {
   res.send('api funcionando')
 })
 
-app.listen(port, () => console.log("Rodando na porta " + port));
+module.exports = app;
+
+
+// app.listen(port, () => console.log("Rodando na porta " + port));
