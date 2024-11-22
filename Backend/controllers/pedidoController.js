@@ -204,6 +204,8 @@ const atualizarPagamento = async (req, res) => {
 
 
 const gerenciaNetPix = async (req, res) => {
+  const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
   try {
     console.log("Dados recebidos no body:", req.body);
 
