@@ -43,7 +43,7 @@ const fazerPedido = async (req, res) => {
   }
 };
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_PROD);
 const fazerPedidoStripe = async (req, res) => {
   try {
     const { usuarioId, itens, endereco, metodoPagamento } = req.body;
