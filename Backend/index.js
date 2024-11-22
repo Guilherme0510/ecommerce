@@ -33,7 +33,7 @@ app.get('/', (req,res) => {
   res.send('api funcionando')
 })
 
-module.exports = app;
+export default app;
 
 
 // app.listen(port, () => console.log("Rodando na porta " + port));
