@@ -207,11 +207,12 @@ const gerenciaNetPix = async (req, res) => {
   try {
     console.log("Dados recebidos no body:", req.body);
 
-    const certPath = path.join(process.cwd(), "certs", process.env.CERTIFICADO_PROD);
-    const certBuffer = fs.readFileSync(certPath);
+    const cert = fs.readFileSync(
+      path.resolve(__dirname, `../certs/${process.env.CERTIFICADO_PROD}`)
+    );
 
     const agent = new https.Agent({
-      pfx: certBuffer,
+      pfx: cert,
       passphrase: "", 
     });
 
