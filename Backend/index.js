@@ -16,7 +16,7 @@ import https from "https";
 dotenv.config();
 const app = express();
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 4000;
 connectDb();
 connectCloudinary();
 gerenciaNetConfig();
@@ -53,7 +53,7 @@ const registrarWebhook = async (accessToken) => {
         "Content-Type": "application/json",
       },
       data: {
-        url: "https://b775-191-54-13-130.ngrok-free.app/webhook", // Seu domínio ngrok
+        url: "https://ecommerce-maps-backend.vercel.app/webhook", 
       },
     });
 

@@ -15,28 +15,27 @@ dotenv.config();
 const moeda = "brl";
 const frete = 10;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const fazerPedido = async (req, res) => {
   try {
-    const { usuarioId, itens, quantidade, endereco, metodoPagamento } =
-      req.body;
-
+    const { usuarioId, itens, quantidade, endereco, metodoPagamento, status } =
+    req.body;
+    
     const pedidoDados = {
       usuarioId,
       itens,
       quantidade,
       endereco,
-      metodoPagamento, // Valor dinâmico vindo do frontend
-      pagamento: false, // Inicialmente como falso
+      metodoPagamento,
+      pagamento: false,
       data: Date.now(),
+      status: "Pendente"
     };
-
     const novoPedido = new pedidoModel(pedidoDados);
     await novoPedido.save();
-
+    
     await usuarioModelo.findByIdAndUpdate(usuarioId, { dadosCarrinho: {} });
-
+    
     res.json({ success: true, message: "Pedido realizado com sucesso!" });
   } catch (error) {
     console.log(error);
@@ -44,58 +43,79 @@ const fazerPedido = async (req, res) => {
   }
 };
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const fazerPedidoStripe = async (req, res) => {
   try {
-    const { usuarioId, itens, quantidade, endereco } = req.body;
+    const { usuarioId, itens, endereco, metodoPagamento } = req.body;
     const { origin } = req.headers;
+    const origem = origin || "http://localhost:5173";
 
     const pedidoDados = {
       usuarioId,
       itens,
-      quantidade,
       endereco,
-      metodoPagamento: "Stripe",
+      metodoPagamento,
       pagamento: false,
       data: Date.now(),
     };
 
+    // Criar o pedido no banco de dados
     const novoPedido = new pedidoModel(pedidoDados);
     await novoPedido.save();
 
-    const line_items = itens.map((item) => ({
-      price_data: {
-        currency: moeda,
-        product_data: {
-          name: item.nome,
+    // Buscar o preço de cada item no banco de dados
+    const line_items = await Promise.all(itens.map(async (item) => {
+      const produto = await produtoModel.findById(item.produtoId); // Buscar produto pelo ID
+      if (!produto || !produto.preco) {
+        throw new Error(`Produto com ID ${item.produtoId} não encontrado ou sem preço.`);
+      }
+
+      // Criar item para o Stripe com preço em centavos
+      return {
+        price_data: {
+          currency: moeda, // Substitua pela moeda que você está usando
+          product_data: {
+            name: item.nome,
+          },
+          unit_amount: produto.preco * 100, // Preço em centavos
         },
-        unit_amount: item.preco * 100,
-      },
-      quantity: item.quantidade,
+        quantity: item.quantidade,
+      };
     }));
+
+    // Caso tenha frete, adicione no final (verifique se a variável 'frete' está definida)
+    if (!frete || isNaN(frete)) {
+      throw new Error('Valor de frete inválido.');
+    }
 
     line_items.push({
       price_data: {
-        currency: moeda,
+        currency: moeda, // Substitua pela moeda que você está usando
         product_data: {
-          name: "Delivery Charges",
+          name: "Frete",
         },
-        unit_amount: frete * 100,
+        unit_amount: frete * 100, // Multiplicando por 100 para valores em centavos
       },
       quantity: 1,
     });
 
+    // Criar a sessão de pagamento no Stripe
     const session = await stripe.checkout.sessions.create({
-      success_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
-      cancel_url: `${origin}/verify?success=false&orderId=${newOrder._id}`,
+      payment_method_types: ['card'],
+      success_url: `${origem}/verify?success=true&orderId=${novoPedido._id}`,
+      cancel_url: `${origem}/verify?success=false&orderId=${novoPedido._id}`,
       line_items,
       mode: "payment",
     });
+
     res.json({ success: true, session_url: session.url });
   } catch (error) {
-    console.log(error);
+    console.log('Erro ao criar pedido Stripe:', error);
     res.json({ success: false, message: error.message });
   }
 };
+
+
 
 const verificarStripe = async (req, res) => {
   const { pedidoId, success, usuarioId } = req.body;
@@ -104,8 +124,8 @@ const verificarStripe = async (req, res) => {
     const isSuccess = success === true || success === "true";
 
     if (isSuccess) {
-      await pedidoModel.findByIdAndUpdate(pedidoId, { payment: true });
-      await usuarioModelo.findByIdAndUpdate(usuarioId, { cartData: {} });
+      await pedidoModel.findByIdAndUpdate(pedidoId, { pagamento: true });
+      await usuarioModelo.findByIdAndUpdate(usuarioId, { dadosCarrinho: {} });
       return res.json({ success: true });
     } else {
       await usuarioModelo.findByIdAndDelete(pedidoId);
@@ -171,26 +191,37 @@ const atualizarStatus = async (req, res) => {
   }
 };
 
-const gerenciaNetPix = async (req, res) => {
-  const certPath = path.join(process.cwd(), "certs", process.env.CERTIFICADO);
-
-  console.log(certPath);
-
-  const certBuffer = fs.readFileSync(certPath);
-
-  const agent = new https.Agent({
-    pfx: certBuffer,
-    passphrase: "", 
-  });
-
-  const credentials = Buffer.from(
-    `${process.env.CHAVE_CLIENT_ID}:${process.env.CHAVE_CLIENT_SECRET}`
-  ).toString("base64");
-
+const atualizarPagamento = async (req, res) => {
   try {
+    const { pedidoId, pagamento } = req.body;
+    await pedidoModel.findByIdAndUpdate(pedidoId, { pagamento });
+    res.json({ success: true, message: "Pagamento atualizado" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+
+const gerenciaNetPix = async (req, res) => {
+  try {
+    console.log("Dados recebidos no body:", req.body);
+
+    const certPath = path.join(process.cwd(), "certs", process.env.CERTIFICADO_PROD);
+    const certBuffer = fs.readFileSync(certPath);
+
+    const agent = new https.Agent({
+      pfx: certBuffer,
+      passphrase: "", 
+    });
+
+    const credentials = Buffer.from(
+      `${process.env.CHAVE_CLIENT_ID_PROD}:${process.env.CHAVE_CLIENT_SECRET_PROD}`
+    ).toString("base64");
+
     const authResponse = await axios({
       method: "POST",
-      url: `${process.env.ENDPOINT}/oauth/token`,
+      url: `${process.env.ENDPOINT_PROD}/oauth/token`,
       headers: {
         Authorization: `Basic ${credentials}`,
         "Content-Type": "application/json",
@@ -201,10 +232,12 @@ const gerenciaNetPix = async (req, res) => {
       },
     });
 
+    console.log("Resposta da API de autenticação:", authResponse.data);
+
     const accessToken = authResponse.data?.access_token;
 
     const reqGN = axios.create({
-      baseURL: process.env.ENDPOINT,
+      baseURL: process.env.ENDPOINT_PROD,
       httpsAgent: agent,
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -214,35 +247,66 @@ const gerenciaNetPix = async (req, res) => {
 
     const dataCob = {
       calendario: {
-        expiracao: 3600,
+        expiracao: 3600, 
       },
       devedor: {
         cpf: req.body.cpf,
         nome: req.body.nome,
       },
       valor: {
-        original: req.body.preco || "100.00",
+        original: req.body.preco,
       },
-      chave: "11932911121",
+      chave: process.env.CHAVE_PIX,
       solicitacaoPagador:
         req.body.solicitacaoPagador || "Cobrança dos serviços prestados.",
     };
+
     const cobResponse = await reqGN.post("/v2/cob", dataCob);
+
+    console.log("Resposta da criação de cobrança:", cobResponse.data);
+
     const qrCodeResponse = await reqGN.get(
       `/v2/loc/${cobResponse.data.loc.id}/qrcode`
     );
 
-    res.status(200).json(qrCodeResponse.data);
+    console.log("QR Code response:", qrCodeResponse.data);
+
+    const { usuarioId, itens, quantidade, endereco } = req.body;
+    const pedidoDados = {
+      usuarioId,
+      itens,
+      quantidade,
+      endereco,
+      metodoPagamento: "Pix",
+      pagamento: false,
+      data: Date.now(),
+      status: "Pendente",
+    };
+
+    const novoPedido = new pedidoModel(pedidoDados);
+    await novoPedido.save();
+
+    await usuarioModelo.findByIdAndUpdate(usuarioId, { dadosCarrinho: {} });
+
+    res.status(200).json({
+      success: true,
+      message: "Pedido realizado com sucesso!",
+      qrCode: qrCodeResponse.data,
+    });
   } catch (error) {
-    console.error("Erro ao gerar QR Code:", error.message);
-    res
-      .status(500)
-      .json({ error: "Erro ao gerar QR Code", details: error.message });
+    console.error("Erro ao gerar QR Code:", error);
+
+    if (error.response) {
+      console.error("Resposta da API de erro:", error.response.data);
+      console.error("Status de erro:", error.response.status);
+    }
+
+    res.status(500).json({
+      error: "Erro ao gerar QR Code",
+      details: error.message,
+    });
   }
 };
-
-
-
 
 export {
   fazerPedido,
@@ -252,4 +316,5 @@ export {
   gerenciaNetPix,
   fazerPedidoStripe,
   verificarStripe,
+  atualizarPagamento
 };

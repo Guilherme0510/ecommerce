@@ -78,7 +78,9 @@ const Perfil = () => {
         ) : (
           <div className="flex flex-col gap-2">
             {pedidosTotais.length === 0 ? (
-              <p className="text-center text-lg font-semibold">Nenhum pedido ainda.</p>
+              <p className="text-center text-lg font-semibold">
+                Nenhum pedido ainda.
+              </p>
             ) : (
               pedidosTotais.map((pedido, index) => {
                 return (
@@ -90,29 +92,41 @@ const Perfil = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                         <div className="flex flex-row items-start gap-4 p-4 border rounded-lg shadow-md">
                           <img
-                            src={pedido.produto?.imagem[0] || "default_image_url"}
+                            src={
+                              pedido.produto?.imagem[0] || "default_image_url"
+                            }
                             alt={pedido.produto?.nome || "Produto sem nome"}
                             className="object-cover w-[200px] h-[200px] rounded-lg"
                           />
                           <div>
                             <h2 className="text-2xl font-semibold">
-                              {pedido.produto?.nome || "Nome do produto indisponível"}
+                              {pedido.produto?.nome ||
+                                "Nome do produto indisponível"}
                             </h2>
                             <p className="text-lg">
                               Quantidade: {pedido.quantidade || "N/A"}
                             </p>
                             <p className="text-lg font-semibold">
-                              {currency} {pedido.produto?.preco * pedido.quantidade}
+                              {currency}{" "}
+                              {pedido.produto?.preco * pedido.quantidade}
                             </p>
                           </div>
                         </div>
-  
+
                         <div className="flex flex-col items-start gap-4 p-4 border rounded-lg shadow-md">
                           <h3 className="text-xl font-semibold">
                             Detalhes do Pedido
                           </h3>
                           <p>Status: {pedido.status || "Indefinido"}</p>
-                          <p>Pagamento: {pedido.pagamento ? "Pago" : "Pendente"}</p>
+                          <p
+                            className={`${
+                              pedido.pagamento
+                                ? "text-green-500"
+                                : "text-red-500"
+                            }`}
+                          >
+                            Pagamento: {pedido.pagamento ? "Pago" : "Pendente"}
+                          </p>
                           <p>Método de Pagamento: {pedido.metodoPagamento}</p>
                           <p>
                             Data do Pedido:{" "}

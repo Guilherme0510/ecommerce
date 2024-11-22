@@ -17,7 +17,8 @@ import axios from "axios";
 import ModalQRCode from "../Components/QrCode";
 
 const Pedido = () => {
-  const { frete, carrinhoItems, produtos, backendUrl,token, navigate } = useContext(ShopContext);
+  const { frete, carrinhoItems, produtos, backendUrl, token, navigate } =
+    useContext(ShopContext);
   const [totalProdutos, setTotalProdutos] = useState(0);
   const [valorTotal, setValorTotal] = useState(0);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -25,13 +26,13 @@ const Pedido = () => {
 
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [copiaEColaPix, setCopiaEColaPix] = useState('');
+  const [copiaEColaPix, setCopiaEColaPix] = useState("");
 
   const [formData, setFormData] = useState({
     primeiroNome: "",
     sobrenome: "",
     email: "",
-    cpf: '',
+    cpf: "",
     endereco: "",
     numeroCasa: "",
     cidade: "",
@@ -49,7 +50,7 @@ const Pedido = () => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-      let itensPedido = [];
+    let itensPedido = [];
     for (const [itemId, quantidade] of Object.entries(carrinhoItems)) {
       if (quantidade > 0) {
         const itemInfo = produtos.find((produto) => produto._id === itemId);
@@ -57,12 +58,12 @@ const Pedido = () => {
           itensPedido.push({
             produtoId: itemInfo._id,
             quantidade: quantidade,
-            nome: itemInfo.nome
+            nome: itemInfo.nome,
           });
         }
       }
     }
-    const nomeCompleto = formData.primeiroNome + ' ' + formData.sobrenome;
+    const nomeCompleto = formData.primeiroNome + " " + formData.sobrenome;
 
     const pedidoData = {
       usuarioId: formData.email,
@@ -71,67 +72,110 @@ const Pedido = () => {
       metodoPagamento: method,
       pagamento: false,
       cpf: formData.cpf,
-      nome: nomeCompleto
-
+      nome: nomeCompleto,
+      preco: valorTotal.toFixed(2),
     };
-    
+
     console.log("Pedido enviado para gerar o QR Code:", pedidoData);
 
     try {
       switch (method) {
-        case 'pix':
+        case "pix":
           try {
-            const response = await axios.post(backendUrl + '/api/pedido/pix-qr-code', pedidoData, {
-              headers: {
-                "Authorization": `Bearer ${token}`,
-              },
-            });
-        
-            console.log(response.data);
-            toast.success("QR Code gerado com sucesso!");
-        
-            const qrCode = response.data.imagemQrcode;
-            const copiaEColaPix = response.data.qrcode;
-            setCopiaEColaPix(copiaEColaPix)
-            setQrCodeUrl(qrCode);
-            setShowModal(true);
-        
+            const response = await axios.post(
+              `${backendUrl}/api/pedido/pix-qr-code`,
+              pedidoData,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            console.log("Resposta da API:", response.data); // Verifique o que está sendo retornado
+
+            // Agora acessamos a chave qrCode, que contém os dados qrcode e imagemQrcode
+            const { qrcode, imagemQrcode } = response.data.qrCode;
+
+            if (imagemQrcode && qrcode) {
+              console.log("QR Code gerado:", imagemQrcode);
+              toast.success("QR Code gerado com sucesso!");
+
+              // Atualiza o estado com os dados recebidos
+              setCopiaEColaPix(qrcode);
+              setQrCodeUrl(imagemQrcode);
+              setShowModal(true);
+            } else {
+              throw new Error("Dados de QR Code ausentes na resposta.");
+            }
           } catch (error) {
             toast.error("Erro ao gerar QR Code!");
-            console.error(error.message);
+            console.error("Erro:", error.response?.data || error.message);
           }
+
           break;
-    
+
         default:
           toast.error("Método de pagamento desconhecido.");
+          break;
+
+        case "teste":
+          try {
+            const response = await axios.post(
+              backendUrl + "/api/pedido/fazer_pedido",
+              pedidoData,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.data.success) {
+              toast.success("Pedido teste realizado");
+            } else {
+              toast.error(response.data.message && "Erro pedido teste");
+            }
+          } catch (error) {
+            console.log(error);
+            toast.error(response.data.message && "Erro pedido teste");
+          }
+          break;
+
+        case "stripe":
+          const response = await axios.post(
+            backendUrl + "/api/pedido/stripe",
+            pedidoData,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          if (response.data.success) {
+            const { session_url } = response.data;
+            window.location.replace(session_url);
+          } else {
+            toast.error(response.data.message);
+          }
           break;
       }
     } catch (error) {
       toast.error("Erro ao processar o pedido!");
-      console.error(error); 
+      console.error(error);
     }
-    
-      
 
     // navigate('/perfil')
   };
-  
 
   useEffect(() => {
     let total = 0;
     const produtosCarrinho = [];
-  
+
     for (const produtoId in carrinhoItems) {
       const produto = produtos.find((p) => p._id === produtoId);
-      
+
       if (produto && carrinhoItems[produtoId] > 0) {
         const quantidade = carrinhoItems[produtoId];
         produtosCarrinho.push({ ...produto, quantidade });
-  
+
         total += produto.preco * quantidade;
       }
     }
-  
+
     setTotalProdutos(total);
     setValorTotal(total + frete);
   }, [carrinhoItems, frete, produtos]);
@@ -165,7 +209,7 @@ const Pedido = () => {
                 required
               />
             </div>
-            
+
             <input
               type="number"
               name="cpf"
@@ -280,29 +324,29 @@ const Pedido = () => {
                   <FontAwesomeIcon icon={faQrcode} className="h-5 mx-4" />
                   <span className="text-gray-500 text-sm font-medium">Pix</span>
                 </div>
-
                 <div
-                  onClick={() => setMethod("boleto")}
+                  onClick={() => setMethod("teste")}
                   className="flex items-center gap-1 border p-2 cursor-pointer rounded-xl"
                 >
                   <p
                     className={`min-w-3.5 h-3.5 border rounded-full ${
-                      method === "boleto" ? "bg-green-400" : ""
+                      method === "teste" ? "bg-green-400" : ""
                     }`}
                   />
-                  <FontAwesomeIcon icon={faCreditCard} className="h-5 mx-4" />
+                  <FontAwesomeIcon icon={faQrcode} className="h-5 mx-4" />
                   <span className="text-gray-500 text-sm font-medium">
-                    Boleto
+                    teste
                   </span>
                 </div>
 
+
                 <div
-                  onClick={() => setMethod("credito")}
+                  onClick={() => setMethod("stripe")}
                   className="flex items-center gap-1 border p-2 cursor-pointer rounded-xl"
                 >
                   <p
                     className={`min-w-3.5 h-3.5 border rounded-full ${
-                      method === "credito" ? "bg-green-400" : ""
+                      method === "stripe" ? "bg-green-400" : ""
                     }`}
                   />
                   <FontAwesomeIcon icon={faMoneyBillAlt} className="h-5 mx-4" />
@@ -325,11 +369,11 @@ const Pedido = () => {
         </div>
       </div>
       <ModalQRCode
-          showModal={showModal}
-          qrCodeUrl={qrCodeUrl}
-          copiaECola={copiaEColaPix}
-          closeModal={() => setShowModal(false)} 
-        />
+        showModal={showModal}
+        qrCodeUrl={qrCodeUrl}
+        copiaECola={copiaEColaPix}
+        closeModal={() => setShowModal(false)}
+      />
     </form>
   );
 };

@@ -21,6 +21,7 @@ import Contato from "./Pages/Contato";
 import Login from "./Pages/Login";
 
 import { Analytics } from '@vercel/analytics/react';
+import Verify from "./Pages/Verify";
 
 const App = () => {
   const location = useLocation();
@@ -54,6 +55,7 @@ const App = () => {
           <Route path="/sobre" element={<Sobre />} />
           <Route path="/contato" element={<Contato />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/verify" element={<Verify />} />
         </Routes>
       </div>
 
