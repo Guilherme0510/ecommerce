@@ -1,18 +1,23 @@
 import EfiPay from "sdk-node-apis-efi";
+import fs from "fs";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url"; // Para compatibilidade com módulos ES
 
 dotenv.config();
 
+// Obter o caminho do diretório com import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export const gerenciaNetConfig = async () => {
-  // Obter o conteúdo do certificado em Base64 da variável de ambiente
-  const certBase64 = process.env.CERTIFICATE_P12;
+  // Usando a variável de ambiente CERT_PATH
+  const certPath = process.env.CERT_PATH || path.join(__dirname, "..", "certs", "producao-630873-ecommerce-maps.p12");
 
-  if (!certBase64) {
-    throw new Error("Certificado não encontrado na variável de ambiente.");
-  }
+  console.log("Caminho do certificado:", certPath);
 
-  // Converter o Base64 para um Buffer
-  const cert = Buffer.from(certBase64, "base64");
+  // Ler o certificado
+  const cert = fs.readFileSync(certPath);
 
   // Configuração do cliente Gerencianet
   const gerenciaNetClient = new EfiPay({
