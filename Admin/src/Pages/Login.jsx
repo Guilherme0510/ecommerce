@@ -1,6 +1,7 @@
+/* eslint-disable react/prop-types */
 import axios from "axios";
 import { backendUrl } from "../App";
-import React, { useState } from "react";
+import  { useState } from "react";
 import { toast } from "react-toastify";
 
 const Login = ({ setToken }) => {

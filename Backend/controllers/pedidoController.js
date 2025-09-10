@@ -49,7 +49,7 @@ const fazerPedidoStripe = async (req, res) => {
   try {
     const { usuarioId, itens, endereco, metodoPagamento } = req.body;
     const { origin } = req.headers;
-    const origem = origin || "http://localhost:5173";
+    const origem = origin || "https://ecommerce-maps-backend.vercel.app/";
 
     const pedidoDados = {
       usuarioId,

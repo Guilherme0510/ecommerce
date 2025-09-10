@@ -34,6 +34,4 @@ app.get('/', (req,res) => {
 })
 
 export default app;
-
-"ENOENT: no such file or directory, open '/var/task/certs/producao-630873-ecommerce-maps.p12'"
 app.listen(port, () => console.log("Rodando na porta " + port));

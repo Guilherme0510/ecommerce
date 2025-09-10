@@ -8,11 +8,11 @@ const ItemProduto = ({ produtoId, image, name, preco }) => {
 
   return (
     <Link to={`/produto/${produtoId}`} className="text-gray-700 cursor-pointer">
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center ">
         <div className="overflow-hidden">
           <img
             src={image}
-            className={` h-[200px] object-cover rounded-xl hover:scale-110 transition ease-in-out`} 
+            className={` h-[200px] object-cover rounded-xl hover:scale-110 transition ease-in-out border-2 border-gray-400`} 
             alt={name || 'Produto'}
           />
         </div>

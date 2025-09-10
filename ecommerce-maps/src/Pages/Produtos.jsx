@@ -22,10 +22,12 @@ const Produtos = () => {
   const [searchQuery, setSearchQuery] = useState(""); // Variável para armazenar o texto da pesquisa
   const [sortOption, setSortOption] = useState("relevante");
   const [produtos, setProdutos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 8;
 
   useEffect(() => {
     const fetchProdutos = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(
           backendUrl + "/api/produto/listaproduto"
@@ -39,6 +41,7 @@ const Produtos = () => {
         console.log(error);
         toast.error(error.message);
       }
+      setLoading(false);
     };
 
     fetchProdutos();
@@ -91,6 +94,9 @@ const Produtos = () => {
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
+  if (loading) {
+    return <div>Carregando produtos...</div>;
+  }
 
   return (
     <div className="flex flex-col md:flex-row mt-8">
@@ -103,7 +109,7 @@ const Produtos = () => {
         >
           <p className="mb-3 text-lg font-medium">CATEGORIAS</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            {["homem", "mulher"].map((label) => (
+            {["salgado", "especiais", "vegetariano", "doce"].map((label) => (
               <label
                 key={label}
                 className="flex items-center gap-2 cursor-pointer"

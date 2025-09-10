@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import { imagens } from "../assets/assets";
 import { backendUrl } from "../App.jsx";
+import { useNavigate } from "react-router-dom";
 
 const Add = ({ token }) => {
   const [image1, setImage1] = useState(false);
@@ -17,6 +18,7 @@ const Add = ({ token }) => {
 
   const [isLoading, setIsLoading] = useState(false); // Estado para controlar o carregamento
 
+  const navigate = useNavigate();
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
@@ -50,10 +52,6 @@ const Add = ({ token }) => {
         setDescricao("");
         setPreco("");
         setCategoria("");
-        setImage1(false);
-        setImage2(false);
-        setImage3(false);
-        setImage4(false);
       } else {
         toast.error(response.data.message);
       }
@@ -61,7 +59,8 @@ const Add = ({ token }) => {
       console.error(error);
       toast.error(error.message);
     } finally {
-      setIsLoading(false); // Finaliza o carregamento
+navigate('/add')
+      setIsLoading(false); 
     }
   };
 
@@ -172,8 +171,10 @@ const Add = ({ token }) => {
               onChange={(e) => setCategoria(e.target.value)}
             >
               <option value="">Selecione a categoria</option>
-              <option value="homem">Para Homens</option>
-              <option value="mulher">Para Mulher</option>
+              <option value="salgado">Salgado</option>
+              <option value="especiais">Especial</option>
+              <option value="vegetariano">Vegetariano</option>
+              <option value="doce">Doce</option>
             </select>
           </div>
           <div>
